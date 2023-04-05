@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { SandboxedIframe } from './SandboxedIframe';
 
 export const Events = {
-    IFRAME_RENDER: 'IFRAME_RENDER',
+  IFRAME_RENDER: 'IFRAME_RENDER',
+  WIDGET_RENDER: 'WIDGET_RENDER',
 };
 
 export function getAppDomId(id: string) {

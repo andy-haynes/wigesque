@@ -50,7 +50,7 @@ export default function Web() {
           });
         }
       } catch (e) {
-        console.error(e);
+        console.error({ event }, e);
       }
     }
 
@@ -71,7 +71,7 @@ export default function Web() {
         <Widget
           key={0}
           id={'0'}
-          sourceUrl={`${LOCAL_PROXY_WIDGET_URL_PREFIX}/mob.near/widget/Homepage`}
+          sourceUrl={`${LOCAL_PROXY_WIDGET_URL_PREFIX}/andyh.near/widget/RenderTest`}
         />
         {
           Object.entries(widgets)

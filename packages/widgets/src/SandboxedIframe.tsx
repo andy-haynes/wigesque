@@ -11,7 +11,11 @@ function buildSandboxedWidget(id: string, scriptSrc: string) {
     } };
 
     function Comp() {
-      return h('div', { className: 'iframe-initialized' }, '${id}');
+      return (
+        /* BEGIN EXTERNAL SOURCE */
+        ${scriptSrc}
+        /* END EXTERNAL SOURCE */
+      )();
     }
 
     const node = Comp();

@@ -34,13 +34,6 @@ export function Widget({ id, sourceUrl }: { id: string, sourceUrl: string }) {
                   scriptSrc={source}
               />
           )}
-          <div
-              id={getAppDomId(id)}
-              className='iframe'
-          >
-              {source && (<div className='iframe-loading'>{id}</div>)}
-              {!source && (<div className='iframe-unrendered'>{id}</div>)}
-          </div>
       </div>
     );
 }

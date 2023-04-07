@@ -3,12 +3,27 @@ function buildSandboxedWidget(id: string, scriptSrc: string) {
   const moduleContents = `
     const { h } = window.preact;
 
+    const widgetRenders = [];
+
     /* NS shims */
     const context = { accountId: 'andyh.near' };
-    const props = { className: 'iframe-initialized' };
+    const props = {};
     const Social = { get(url) {
       return undefined;
     } };
+    const React = {
+      Fragment: 'div',
+    };
+    const styled = {
+      div: (s) => s,
+    };
+
+    const __renderWidget = ({ source, props }) => {
+      const widgetId = window.crypto.randomUUID();
+      widgetRenders.push({ props, source, type: 'WIDGET_RENDER', widgetId, parentId: '${id}' });
+      console.log('rendering dom-' + widgetId + ' for ' + source);
+      return h('div', { ...props, id: 'dom-' + widgetId, className: 'iframe' }, source);
+    }
 
     function Comp() {
       return (
@@ -23,6 +38,10 @@ function buildSandboxedWidget(id: string, scriptSrc: string) {
       JSON.stringify({ type: 'IFRAME_RENDER', id: '${id}', node }),
       '*'
     );
+
+    widgetRenders.forEach((message) => {
+      window.parent.postMessage(JSON.stringify(message), '*');
+    });
   `;
 
   return `
@@ -52,7 +71,7 @@ export function SandboxedIframe({ id, scriptSrc }: { id: string, scriptSrc: stri
             ].join('; ')}
             height={0}
             sandbox='allow-scripts'
-            srcDoc={buildSandboxedWidget(id.split('-')[1], scriptSrc)}
+            srcDoc={buildSandboxedWidget(id.replace('iframe-', ''), scriptSrc)}
             title='code-container'
             width={0}
             style={{ border: 'none' }}

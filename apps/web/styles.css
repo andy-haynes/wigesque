@@ -51,6 +51,8 @@
   flex: 1;
   justify-content: space-between;
   margin: 4px;
+  padding: 20px;
+  border: 1px solid red;
 }
 
 .iframe > div {

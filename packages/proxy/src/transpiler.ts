@@ -14,11 +14,29 @@ export async function compileWidget(widgetPath) {
   });
 
   const [author, , widget] = widgetPath.split('/');
-  const {
+  let {
     [author]: {
       widget: { [widget]: source },
     },
   } = JSON.parse(Buffer.from(result).toString());
+
+  const widgetRegex =
+    /(?<isWidgetReturned>return[(]?)?\s*<Widget\s+(?:src={(?<source0>.+?)})?(?:src="(?<source1>.+?)")?\s+(?:props={(?<props>.+)})?\s*\/>/g;
+
+  const matches = [...source.matchAll(widgetRegex)].map((match) => ({
+    original: match[0],
+    groups: { ...match.groups },
+  }));
+
+  matches.forEach(({ original, groups }) => {
+    const { isWidgetReturned, props, source0, source1 } = groups;
+    const sourceExpression = source0 || `"${source1}"`;
+    const renderWidgetExpression = `__renderWidget({ source: ${sourceExpression}, props: ${props} })`;
+    source = source.replace(
+      original,
+      !!isWidgetReturned ? `return ${renderWidgetExpression}` : `{${renderWidgetExpression}}`,
+    );
+  });
 
   const componentSource = `
   function WidgetComponent () {

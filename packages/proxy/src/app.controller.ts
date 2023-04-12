@@ -1,6 +1,6 @@
 import { Controller, Get, Param } from '@nestjs/common';
 
-import { compileWidget } from "./transpiler";
+import { compileWidget, getWidgetAst, transpileWidget } from "./transpiler";
 
 @Controller()
 export class AppController {
@@ -23,5 +23,20 @@ export class AppController {
     return {
       source: await compileWidget(`${accountId}/widget/${widgetId}`),
     };
+  }
+
+  @Get('raw/:accountId/widget/:widgetId')
+  async getNSWidgetRaw(@Param('accountId') accountId: string, @Param('widgetId') widgetId: string) {
+    return await compileWidget(`${accountId}/widget/${widgetId}`);
+  }
+
+  @Get('transpiled/:accountId/widget/:widgetId')
+  async getNSWidgetSource(@Param('accountId') accountId: string, @Param('widgetId') widgetId: string) {
+    return await transpileWidget(`${accountId}/widget/${widgetId}`);
+  }
+
+  @Get('ast/:accountId/widget/:widgetId')
+  async getNSWidgetAst(@Param('accountId') accountId: string, @Param('widgetId') widgetId: string) {
+    return await getWidgetAst(`${accountId}/widget/${widgetId}`);
   }
 }

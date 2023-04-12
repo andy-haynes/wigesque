@@ -17,6 +17,8 @@ lib
 # misc
 .DS_Store
 *.pem
+.idea/
+**/dist/*
 
 # debug
 npm-debug.log*

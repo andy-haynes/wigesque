@@ -1,43 +1,67 @@
 
 function buildSandboxedWidget(id: string, scriptSrc: string) {
+  const widgetPath = id.split('::')[0];
   const moduleContents = `
+    /* generated code for ${widgetPath} */
     const { h } = window.preact;
 
     const widgetRenders = [];
 
-    /* NS shims */
-    const context = { accountId: 'andyh.near' };
-    const props = {};
-    const Social = { get(url) {
-      return undefined;
-    } };
-    const React = {
-      Fragment: 'div',
-    };
-    const styled = {
-      div: (s) => s,
-    };
-
     const __renderWidget = ({ source, props }) => {
-      const widgetId = window.crypto.randomUUID();
+      const widgetId = source + '::' + window.crypto.randomUUID();
       widgetRenders.push({ props, source, type: 'WIDGET_RENDER', widgetId, parentId: '${id}' });
-      console.log('rendering dom-' + widgetId + ' for ' + source);
-      return h('div', { ...props, id: 'dom-' + widgetId, className: 'iframe' }, source);
+      return h('div', { ...props, id: 'dom-' + widgetId, className: 'iframe' }, 'loading ' + source + '...');
     }
 
-    function Comp() {
-      return (
-        /* BEGIN EXTERNAL SOURCE */
-        ${scriptSrc}
-        /* END EXTERNAL SOURCE */
-      )();
+    function __InternalSandboxComponent() {
+      try {
+        /* NS shims */
+        const context = { accountId: 'andyh.near' };
+        const props = {
+          index: 0,
+        };
+        const state = {};
+        const State = {
+          init() {},
+        };
+        const Social = {
+          get(url) {
+            return undefined;
+          },
+          getr(url) {
+            return null;
+          },
+          keys(path) {
+            return null;
+          }
+        };
+        const React = {
+          Fragment: 'div',
+        };
+        const styled = {
+          div: (s) => 'div',
+        };
+
+        return (
+          /* BEGIN EXTERNAL SOURCE */
+          ${scriptSrc}
+          /* END EXTERNAL SOURCE */
+        )();
+      } catch (e) {
+        return h('div', {}, 'failed to load ${widgetPath}: ' + e.toString());
+      }
     }
 
-    const node = Comp();
-    window.parent.postMessage(
-      JSON.stringify({ type: 'IFRAME_RENDER', id: '${id}', node }),
-      '*'
-    );
+    let node = __InternalSandboxComponent();
+    if (node) {
+      if (typeof node.type !== 'string') {
+        node = h('div', {}, '${widgetPath} parsed non-string type: ' + JSON.stringify(node, null, 2));
+      }
+      window.parent.postMessage(
+        JSON.stringify({ type: 'IFRAME_RENDER', id: '${id}', node }),
+        '*'
+      );
+    }
 
     widgetRenders.forEach((message) => {
       window.parent.postMessage(JSON.stringify(message), '*');

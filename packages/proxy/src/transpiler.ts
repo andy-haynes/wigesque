@@ -2,7 +2,7 @@ import { transformAsync } from '@babel/core';
 import { JsonRpcProvider } from '@near-js/providers';
 import { CodeResult } from '@near-js/types';
 
-export async function compileWidget(widgetPath) {
+export async function fetchWidgetSource(widgetPath) {
   const provider = new JsonRpcProvider({ url: 'https://rpc.mainnet.near.org' });
 
   const { result } = await provider.query<CodeResult>({
@@ -14,30 +14,17 @@ export async function compileWidget(widgetPath) {
   });
 
   const [author, , widget] = widgetPath.split('/');
-  let {
+  const {
     [author]: {
       widget: { [widget]: source },
     },
   } = JSON.parse(Buffer.from(result).toString());
 
-  const widgetRegex =
-    /(?<isWidgetReturned>return[(]?)?\s*<Widget\s+(?:src={(?<source0>.+?)})?(?:src="(?<source1>.+?)")?\s+(?:props={(?<props>.+)})?\s*\/>/g;
+  return source;
+}
 
-  const matches = [...source.matchAll(widgetRegex)].map((match) => ({
-    original: match[0],
-    groups: { ...match.groups },
-  }));
-
-  matches.forEach(({ original, groups }) => {
-    const { isWidgetReturned, props, source0, source1 } = groups;
-    const sourceExpression = source0 || `"${source1}"`;
-    const renderWidgetExpression = `__renderWidget({ source: ${sourceExpression}, props: ${props} })`;
-    source = source.replace(
-      original,
-      !!isWidgetReturned ? `return ${renderWidgetExpression}` : `{${renderWidgetExpression}}`,
-    );
-  });
-
+export async function transpileWidget(widgetPath) {
+  const source = await fetchWidgetSource(widgetPath);
   const componentSource = `
   function WidgetComponent () {
     ${source}
@@ -49,4 +36,42 @@ export async function compileWidget(widgetPath) {
   });
 
   return code;
+}
+
+export async function getWidgetAst(widgetPath) {
+  const source = await fetchWidgetSource(widgetPath);
+  const componentSource = `
+  function WidgetComponent () {
+    ${source}
+  }
+`;
+
+  const { ast } = await transformAsync(componentSource, {
+    ast: true,
+    presets: ['preact'],
+  });
+
+  console.log({ ast });
+  return JSON.stringify(ast);
+}
+
+export async function compileWidget(widgetPath) {
+  let transpiled = await transpileWidget(widgetPath);
+
+  const widgetRegex =
+    /h\(Widget,\s+\{\s+src:\s+(?<source>[\w\d '"`/.?$&(){}-]+),?\s+(?:props:\s+(?<props>[{}a-z0-9,.\s]+))?}\)/gi;
+  const matches = [...transpiled.matchAll(widgetRegex)].map((match) => ({
+    original: match[0],
+    groups: { ...match.groups },
+  }));
+
+  matches.forEach(({ original, groups }) => {
+    const { props, source } = groups;
+    transpiled = transpiled.replace(
+      original,
+      `__renderWidget({ source: ${source}, props: ${props} })`,
+    );
+  });
+
+  return transpiled;
 }

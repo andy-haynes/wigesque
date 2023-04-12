@@ -26,14 +26,14 @@ export function Widget({ id, sourceUrl }: { id: string, sourceUrl: string }) {
         }());
     }, []);
 
+    if (!source) {
+      return null;
+    }
+
     return (
-      <div>
-          {source && (
-              <SandboxedIframe
-                  id={getIframeId(id)}
-                  scriptSrc={source}
-              />
-          )}
-      </div>
+        <SandboxedIframe
+            id={getIframeId(id)}
+            scriptSrc={source}
+        />
     );
 }

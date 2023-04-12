@@ -8,7 +8,7 @@ const roots = {} as { [key: string]: any };
 const widgets = {} as { [key: string]: any };
 
 export default function Web() {
-  const [updates, setUpdates] = useState(0);
+  const [updates, setUpdates] = useState('');
 
   const createAndMountElement = ({ children, id, props, type }: { children?: any, id: string, props: object, type: string }) => {
     const element = React.createElement(type, props, children);
@@ -19,25 +19,26 @@ export default function Web() {
       if (domElement) {
         const root = ReactDOM.createRoot(domElement);
         roots[id] = root;
-        setUpdates(updates + 1);
         root.render(element);
       }
     }
   };
 
-  const createChildElements = (children: any): any => {
+  const createChildElements = ({ children, depth, index, parentId }: { children: any, depth: number, index?: number, parentId: string }): any => {
+    if (!children) {
+      return '';
+    }
+
     if (typeof children === 'string') {
       return children;
     }
 
     if (children.type) {
       const { type, props: { children: subChildren, ...props } } = children;
-      return React.createElement(type, props, createChildElements(subChildren));
+      return React.createElement(type, { ...props, key: `${parentId}-${depth}-${index}` }, createChildElements({ children: subChildren, depth: depth + 1, parentId }));
     }
 
-    return children.reduce((components: any, child: any) => {
-      return [...components, createChildElements(child)];
-    }, []);
+    return children.map((child: any, i: number) => createChildElements({ children: child, depth: depth + 1, index: i, parentId }));
   };
 
   useEffect(() => {
@@ -53,11 +54,17 @@ export default function Web() {
           const { children, ...props } = node?.props || { children: [] };
 
           createAndMountElement({
-            children: createChildElements(children),
+            children: [
+              React.createElement('span', { className: 'dom-label' }, `[${id.split('::')[0]}]`),
+              React.createElement('br'),
+              ...createChildElements({ children, depth: 0, parentId: id }),
+            ],
             id,
             props,
             type: node.type,
           });
+          console.log(`rendered DOM for ${id}`);
+          setUpdates(updates + id);
         } else if (data.type === Events.WIDGET_RENDER) {
           const { props, source, widgetId } = data;
 
@@ -70,7 +77,8 @@ export default function Web() {
             props,
             type: 'div',
           });
-          setUpdates(updates + 1);
+          console.log(`mounted root DOM for ${source}`);
+          setUpdates(updates + widgetId);
         }
       } catch (e) {
         console.error({ event }, e);
@@ -83,10 +91,10 @@ export default function Web() {
 
   return (
     <div className='App'>
+      <div id={getAppDomId('root')} className='iframe'>
+        root
+      </div>
       <div className="iframes">
-        <div id={getAppDomId('root')} className='iframe'>
-          root
-        </div>
         <Widget
           key={0}
           id={'root'}
@@ -95,7 +103,9 @@ export default function Web() {
         {
           Object.entries(widgets)
             .map(([widgetId, { sourceUrl }]) => (
-              <Widget key={widgetId} id={widgetId} sourceUrl={sourceUrl} />
+              <div key={widgetId}>
+                <Widget id={widgetId} sourceUrl={sourceUrl} />
+              </div>
             ))
         }
       </div>

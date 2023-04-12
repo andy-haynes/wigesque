@@ -71,3 +71,8 @@
 .iframe-loading {
   background-color: goldenrod;
 }
+
+.dom-label {
+  font-size: 10px;
+  font-family: "Roboto Mono for Powerline";
+}

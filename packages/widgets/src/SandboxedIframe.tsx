@@ -7,28 +7,34 @@ function buildSandboxedWidget(id: string, scriptSrc: string) {
 
     const widgetRenders = [];
 
-    const __renderWidget = ({ source, props }) => {
-      const widgetId = source + '::' + window.crypto.randomUUID();
-      widgetRenders.push({ props, source, type: 'WIDGET_RENDER', widgetId, parentId: '${id}' });
-      return h('div', { ...props, id: 'dom-' + widgetId, className: 'iframe' }, 'loading ' + source + '...');
+    const __renderBuiltin = (props) => {
+      return h('span', props, 'I am a predefined component with props keys: ' + Object.keys(props).join(', '));
+    }
+
+    const __renderWidget = ({ src, props }) => {
+      const widgetId = src + '::' + window.crypto.randomUUID();
+      widgetRenders.push({ props, source: src, type: 'WIDGET_RENDER', widgetId, parentId: '${id}' });
+      return h('div', { ...props, id: 'dom-' + widgetId, className: 'iframe' }, 'loading ' + src + '...');
     }
 
     function __InternalSandboxComponent() {
       try {
         /* NS shims */
         const context = { accountId: 'andyh.near' };
-        const props = {
-          index: 0,
-        };
-        const state = {};
+        const props = {};
+        let state = {};
         const State = {
-          init() {},
+          init(obj) { state = obj; },
+          update() {},
         };
         const Social = {
           get(url) {
             return undefined;
           },
           getr(url) {
+            return null;
+          },
+          index(action, key, options) {
             return null;
           },
           keys(path) {
@@ -53,15 +59,21 @@ function buildSandboxedWidget(id: string, scriptSrc: string) {
     }
 
     let node = __InternalSandboxComponent();
-    if (node) {
-      if (typeof node.type !== 'string') {
-        node = h('div', {}, '${widgetPath} parsed non-string type: ' + JSON.stringify(node, null, 2));
-      }
-      window.parent.postMessage(
-        JSON.stringify({ type: 'IFRAME_RENDER', id: '${id}', node }),
-        '*'
-      );
+    if (!node) {
+      node = h('span', {}, '<null>');
     }
+
+    if (typeof node === 'string') {
+      node = h('span', {}, 'component returned string: "' + node + '"');
+    }
+
+    if (typeof node.type !== 'string') {
+      node = h('div', {}, '${widgetPath} parsed non-string type: ' + JSON.stringify(node, null, 2));
+    }
+    window.parent.postMessage(
+      JSON.stringify({ type: 'IFRAME_RENDER', id: '${id}', node }),
+      '*'
+    );
 
     widgetRenders.forEach((message) => {
       window.parent.postMessage(JSON.stringify(message), '*');

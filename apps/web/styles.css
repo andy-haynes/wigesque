@@ -47,12 +47,12 @@
 }
 
 .iframe {
-  align-items: center;
+  /*align-items: center;*/
   flex: 1;
   justify-content: space-between;
   margin: 4px;
-  padding: 20px;
-  border: 1px solid red;
+  padding: 8px;
+  border: 1px solid blue;
 }
 
 .iframe > div {
@@ -70,6 +70,10 @@
 
 .iframe-loading {
   background-color: goldenrod;
+}
+
+span {
+  font-size: 12px;
 }
 
 .dom-label {

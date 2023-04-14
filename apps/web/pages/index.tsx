@@ -9,6 +9,7 @@ const widgets = {} as { [key: string]: any };
 
 export default function Web() {
   const [updates, setUpdates] = useState('');
+  const [widgetCount, setWidgetCount] = useState(1);
 
   const createAndMountElement = ({ children, id, props, type }: { children?: any, id: string, props: object, type: string }) => {
     const element = React.createElement(type, props, children);
@@ -53,11 +54,12 @@ export default function Web() {
           const { id, node } = data;
           const { children, ...props } = node?.props || { children: [] };
 
+          const componentChildren = createChildElements({ children, depth: 0, parentId: id })
           createAndMountElement({
             children: [
               React.createElement('span', { className: 'dom-label' }, `[${id.split('::')[0]}]`),
               React.createElement('br'),
-              ...createChildElements({ children, depth: 0, parentId: id }),
+              ...(Array.isArray(componentChildren) ? componentChildren : [componentChildren]),
             ],
             id,
             props,
@@ -72,6 +74,7 @@ export default function Web() {
               props,
               sourceUrl: `${LOCAL_PROXY_WIDGET_URL_PREFIX}/${source}`,
           };
+          setWidgetCount(widgetCount + Object.keys(widgets).length)
           createAndMountElement({
             id: widgetId,
             props,
@@ -91,6 +94,7 @@ export default function Web() {
 
   return (
     <div className='App'>
+      <h6>{widgetCount} widgets rendered</h6>
       <div id={getAppDomId('root')} className='iframe'>
         root
       </div>

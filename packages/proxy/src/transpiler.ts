@@ -27,6 +27,7 @@ export async function transpileWidget(widgetPath) {
   const source = await fetchWidgetSource(widgetPath);
   const componentSource = `
   function WidgetComponent () {
+    /* ${widgetPath} */
     ${source}
   }
 `;
@@ -38,40 +39,61 @@ export async function transpileWidget(widgetPath) {
   return code;
 }
 
-export async function getWidgetAst(widgetPath) {
-  const source = await fetchWidgetSource(widgetPath);
-  const componentSource = `
-  function WidgetComponent () {
-    ${source}
+function parseComponentExpression({ componentName, source, startIndex }) {
+  const widgetIndex = source.indexOf(`h(${componentName}, `, startIndex);
+  if (widgetIndex === -1) {
+    return null;
   }
-`;
 
-  const { ast } = await transformAsync(componentSource, {
-    ast: true,
-    presets: ['preact'],
-  });
+  const nameOffset = componentName.length + 4;
+  let bracketIndex = widgetIndex + nameOffset + 1;
+  let bracketCount = 1;
+  while (bracketCount > 0) {
+    if (source[bracketIndex] === '{') {
+      bracketCount++;
+    } else if (source[bracketIndex] === '}') {
+      bracketCount--;
+    }
 
-  console.log({ ast });
-  return JSON.stringify(ast);
+    bracketIndex++;
+  }
+
+  const original = source.substring(widgetIndex, bracketIndex + 1);
+  const args = source.substring(widgetIndex + nameOffset, bracketIndex);
+
+  return {
+    args,
+    original,
+    terminatingIndex: bracketIndex,
+  };
+}
+
+function replaceComponents({ source, components }) {
+  return Object.entries(components).reduce((code, [target, replacement]) => {
+    let parsed;
+    let startIndex = 0;
+    do {
+      parsed = parseComponentExpression({
+        componentName: target,
+        source,
+        startIndex,
+      });
+      if (!parsed) {
+        continue;
+      }
+      code = code.replace(parsed.original, `${replacement}(${parsed.args})`);
+      startIndex = parsed.terminatingIndex;
+    } while (parsed);
+    return code;
+  }, source);
 }
 
 export async function compileWidget(widgetPath) {
-  let transpiled = await transpileWidget(widgetPath);
-
-  const widgetRegex =
-    /h\(Widget,\s+\{\s+src:\s+(?<source>[\w\d '"`/.?$&(){}-]+),?\s+(?:props:\s+(?<props>[{}a-z0-9,.\s]+))?}\)/gi;
-  const matches = [...transpiled.matchAll(widgetRegex)].map((match) => ({
-    original: match[0],
-    groups: { ...match.groups },
-  }));
-
-  matches.forEach(({ original, groups }) => {
-    const { props, source } = groups;
-    transpiled = transpiled.replace(
-      original,
-      `__renderWidget({ source: ${source}, props: ${props} })`,
-    );
+  return replaceComponents({
+    source: await transpileWidget(widgetPath),
+    components: {
+      IpfsImageUpload: '__renderBuiltin',
+      Widget: '__renderWidget',
+    },
   });
-
-  return transpiled;
 }

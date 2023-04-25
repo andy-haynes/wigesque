@@ -45,12 +45,12 @@ export default function Web() {
   useEffect(() => {
     async function processEvent(event: any) {
       try {
-        if (typeof event.data !== 'string') {
+        if (typeof event.data !== 'object') {
           return;
         }
 
-        const data = JSON.parse(event.data);
-        if (data.type === Events.IFRAME_RENDER) {
+        const { data } = event;
+        if (data.type === 'widget.render') {
           const { id, node } = data;
           const { children, ...props } = node?.props || { children: [] };
 
@@ -67,19 +67,14 @@ export default function Web() {
           });
           console.log(`rendered DOM for ${id}`);
           setUpdates(updates + id);
-        } else if (data.type === Events.WIDGET_RENDER) {
+        } else if (data.type === 'widget.load') {
           const { props, source, widgetId } = data;
 
           widgets[widgetId] = {
               props,
               sourceUrl: `${LOCAL_PROXY_WIDGET_URL_PREFIX}/${source}`,
           };
-          setWidgetCount(widgetCount + Object.keys(widgets).length)
-          createAndMountElement({
-            id: widgetId,
-            props,
-            type: 'div',
-          });
+          setWidgetCount(Object.keys(widgets).length);
           console.log(`mounted root DOM for ${source}`);
           setUpdates(updates + widgetId);
         }

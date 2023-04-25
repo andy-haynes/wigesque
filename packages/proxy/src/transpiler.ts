@@ -93,7 +93,7 @@ export async function compileWidget(widgetPath) {
     source: await transpileWidget(widgetPath),
     components: {
       IpfsImageUpload: '__renderBuiltin',
-      Widget: '__renderWidget',
+      // Widget: '__renderWidget',
     },
   });
 }

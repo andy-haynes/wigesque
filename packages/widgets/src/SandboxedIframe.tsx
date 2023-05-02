@@ -9,6 +9,29 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
         <script type="module">
           /* generated code for ${widgetPath} */
           const callbacks = {};
+
+          function serializeProps(props, index) {
+            return Object.entries(props)
+              .reduce((newProps, [key, value]) => {
+                if (typeof value !== 'function') {
+                  newProps[key] = value;
+                  return newProps;
+                }
+
+                if (!newProps.__callbacks) {
+                  newProps.__callbacks = {};
+                }
+
+                const fnKey = key + '::' + value.toString();
+                callbacks[fnKey] = value;
+                newProps.__callbacks[fnKey] = {
+                  method: fnKey,
+                };
+
+                return newProps;
+              }, {});
+          }
+
           function serializeNode(node, index) {
             let { type } = node;
             const { children, ...props } = node.props;
@@ -53,29 +76,10 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
               }
             }
 
-            const transferableProps = Object.entries(props)
-              .reduce((newProps, [key, value]) => {
-                if (typeof value !== 'function') {
-                  newProps[key] = value;
-                  return newProps;
-                }
-
-                if (!newProps.__callbacks) {
-                  newProps.__callbacks = {};
-                }
-
-                callbacks[key] = value;
-                newProps.__callbacks[key] = {
-                  method: value.name,
-                };
-
-                return newProps;
-              }, {});
-
             return {
               type,
               props: {
-                ...transferableProps,
+                ...serializeProps(props, index),
                 children: unifiedChildren
                   .flat()
                   .map((c, i) => c && c.props ? serializeNode(c, i) : c),

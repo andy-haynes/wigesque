@@ -15,7 +15,7 @@ function deserializeProps({ id, props }: { id: string, props: any }): any {
 
   Object.entries(props.__callbacks)
     .forEach(([propKey, callback]: [string, any]) => {
-      props[propKey] = (e: any) => {
+      props[propKey.split('::')[0]] = (e: any) => {
         const iframe = document.getElementById(getIframeId(id)) as HTMLIFrameElement;
         iframe?.contentWindow?.postMessage({
           args: {

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 
 const LOCAL_PROXY_WIDGET_URL_PREFIX = 'http://localhost:3001/widget';
+const rootWidgetPath = 'mob.near/widget/Homepage'
 
 const roots = {} as { [key: string]: any };
 const widgets = {} as { [key: string]: any };
@@ -147,15 +148,15 @@ export default function Web() {
   return (
     <div className='App'>
       <h6>{widgetCount} widgets rendered</h6>
-      <div id={getAppDomId('root')} className='iframe'>
-        root
+      <div id={getAppDomId(rootWidgetPath)} className='iframe'>
+        root widget goes here
       </div>
       <div className="iframes">
         <h5>here be hidden iframes</h5>
         <Widget
           key={0}
-          id={'root'}
-          sourceUrl={`${LOCAL_PROXY_WIDGET_URL_PREFIX}/mob.near/widget/Homepage`}
+          id={rootWidgetPath}
+          sourceUrl={`${LOCAL_PROXY_WIDGET_URL_PREFIX}/${rootWidgetPath}`}
         />
         {
           Object.entries(widgets)

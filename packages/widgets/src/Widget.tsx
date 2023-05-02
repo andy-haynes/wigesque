@@ -15,7 +15,7 @@ export function getIframeId(id: string) {
     return `iframe-${id}`;
 }
 
-export function Widget({ id, sourceUrl, widgetProps }: { id: string, sourceUrl: string, widgetProps: any }) {
+export function Widget({ id, sourceUrl, widgetProps }: { id: string, sourceUrl: string, widgetProps?: any }) {
     const [source, setSource] = useState(null);
 
     useEffect(() => {

@@ -186,7 +186,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
   `;
 }
 
-export function SandboxedIframe({ id, scriptSrc, widgetProps }: { id: string, scriptSrc: string, widgetProps: any }) {
+export function SandboxedIframe({ id, scriptSrc, widgetProps }: { id: string, scriptSrc: string, widgetProps?: any }) {
     return (
         <iframe
             id={id}

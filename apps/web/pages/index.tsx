@@ -1,4 +1,4 @@
-import { Events, getAppDomId, Widget } from "widgets";
+import { Events, getAppDomId, getIframeId, Widget } from "widgets";
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 
@@ -7,12 +7,38 @@ const LOCAL_PROXY_WIDGET_URL_PREFIX = 'http://localhost:3001/widget';
 const roots = {} as { [key: string]: any };
 const widgets = {} as { [key: string]: any };
 
+function deserializeProps({ id, props }: { id: string, props: any }): any {
+  if (!props || !props.__callbacks) {
+    return props;
+  }
+
+  Object.entries(props.__callbacks)
+    .forEach(([propKey, callback]: [string, any]) => {
+      props[propKey] = (e: any) => {
+        const iframe = document.getElementById(getIframeId(id)) as HTMLIFrameElement;
+        iframe?.contentWindow?.postMessage({
+          args: {
+            event: {
+              target: {
+                value: e.target?.value,
+              },
+            },
+          },
+          method: callback.method,
+          type: 'widget.callback',
+        }, '*');
+      }
+    });
+
+  return props;
+}
+
 export default function Web() {
   const [updates, setUpdates] = useState('');
   const [widgetCount, setWidgetCount] = useState(1);
 
   const createAndMountElement = ({ children, id, props, type }: { children?: any, id: string, props: object, type: string }) => {
-    const element = React.createElement(type, props, children);
+    const element = React.createElement(type, deserializeProps({ id, props }), children);
     if (roots[id]) {
       roots[id].render(element);
     } else {
@@ -26,17 +52,22 @@ export default function Web() {
   };
 
   const createChildElements = ({ children, depth, index, parentId }: { children: any, depth: number, index?: number, parentId: string }): any => {
+    if (typeof children === 'string' || typeof children === 'number') {
+      return children;
+    }
+
     if (!children) {
       return '';
     }
 
-    if (typeof children === 'string') {
-      return children;
-    }
-
     if (children.type) {
       const { type, props: { children: subChildren, ...props } } = children;
-      return React.createElement(type, { ...props, key: `${parentId}-${depth}-${index}` }, createChildElements({ children: subChildren, depth: depth + 1, parentId }));
+
+      return React.createElement(type, {
+        ...deserializeProps({
+          id: parentId, props }),
+          key: `${parentId}-${depth}-${index}`
+      }, createChildElements({ children: subChildren, depth: depth + 1, parentId }));
     }
 
     return children.map((child: any, i: number) => createChildElements({ children: child, depth: depth + 1, index: i, parentId }));

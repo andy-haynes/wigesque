@@ -1,76 +1,12 @@
 
 function buildSandboxedWidget(id: string, scriptSrc: string) {
   const widgetPath = id.split('::')[0];
-  const moduleContents = `
-    /* generated code for ${widgetPath} */
-    const { h, render } = window.preact;
-
-    const __renderBuiltin = (props) => {
-      return h('span', props, 'I am a predefined component with props keys: ' + Object.keys(props).join(', '));
-    }
-
-    function Widget({ src, props }) {
-      return h('div', props, 'loading ' + src + '...');
-    }
-
-    function WidgetWrapper() {
-      try {
-        /* NS shims */
-        const context = { accountId: 'andyh.near' };
-        const props = {};
-        let state = {};
-        const State = {
-          init(obj) { state = obj; },
-          update() {},
-        };
-        const Social = {
-          get(url) {
-            return undefined;
-          },
-          getr(url) {
-            return null;
-          },
-          index(action, key, options) {
-            return null;
-          },
-          keys(path) {
-            return null;
-          }
-        };
-        const React = {
-          Fragment: 'div',
-        };
-        const styled = {
-          div: (s) => 'div',
-        };
-
-        return (
-          /* BEGIN EXTERNAL SOURCE */
-          ${scriptSrc}
-          /* END EXTERNAL SOURCE */
-        )();
-      } catch (e) {
-        return h('div', {}, 'failed to load ${widgetPath}: ' + e.toString());
-      }
-    }
-
-    let node = WidgetWrapper();
-    if (!node) {
-      node = h('span', {}, '<null>');
-    }
-
-    if (typeof node === 'string') {
-      node = h('span', {}, 'component returned string: "' + node + '"');
-    }
-
-    render(node, document.getElementById('${id}'));
-  `;
 
   return `
     <html>
       <head>
         <script type="text/javascript">
-          function serializeNode(node, depth = 0) {
+          function serializeNode(node) {
             let { type } = node;
             const { children, ...props } = node.props;
             const unifiedChildren = Array.isArray(children)
@@ -81,22 +17,29 @@ function buildSandboxedWidget(id: string, scriptSrc: string) {
               type = 'div';
             } else if (typeof type === 'function') {
               const { name: component } = type;
-              if (component === '_') {
+              if (component === '_' || component === 'IpfsImageUpload') {
                 type = 'div';
               } else if (component === 'Widget') {
                 const { src, props: widgetProps } = props;
                 const widgetId = src + '::' + window.crypto.randomUUID();
-                window.parent.postMessage({
-                  parentId: '${id}',
-                  props: widgetProps,
-                  source: src,
-                  type: 'widget.load',
-                  widgetId,
-                }, '*');
+                try {
+                  window.parent.postMessage({
+                    parentId: '${id}',
+                    // TODO implement callbacks
+                    props: JSON.parse(JSON.stringify(widgetProps || {})),
+                    // props: widgetProps,
+                    source: src,
+                    type: 'widget.load',
+                    widgetId,
+                  }, '*');
+                } catch (error) {
+                  console.warn('failed to dispatch widget load for ${id}', { error, widgetProps });
+                }
 
                 return {
                   type: 'div',
                   props: {
+                    ...props,
                     id: 'dom-' + widgetId,
                     className: 'iframe',
                   },
@@ -104,10 +47,32 @@ function buildSandboxedWidget(id: string, scriptSrc: string) {
               }
             }
 
+            const transferableProps = Object.entries(props)
+              .reduce((newProps, [key, value]) => {
+                if (typeof value !== 'function') {
+                  newProps[key] = value;
+                  return newProps;
+                }
+
+                if (!newProps.__callbacks) {
+                  newProps.__callbacks = {};
+                }
+
+                newProps.__callbacks[key] = {
+                  method: value.name,
+                };
+
+                return newProps;
+              }, {});
+
             return {
               type,
               props: {
-                children: unifiedChildren.filter((c) => c).map((c) => c && c.props ? serializeNode(c, depth + 1) : c),
+                ...transferableProps,
+                children: unifiedChildren
+                  .filter((c) => c)
+                  .flat()
+                  .map((c) => c.props ? serializeNode(c) : c),
               },
             }
           }
@@ -121,7 +86,7 @@ function buildSandboxedWidget(id: string, scriptSrc: string) {
                 type: 'widget.render'
               }, '*');
             } catch (error) {
-              console.warn('failed to dispatch render for ${id}', { error, serialized })
+              console.warn('failed to dispatch render for ${id}', { error, serialized });
             }
           }
 
@@ -131,7 +96,75 @@ function buildSandboxedWidget(id: string, scriptSrc: string) {
       <body>
         <div id="${id}"></div>
         <script type="module">
-          ${moduleContents}
+          /* generated code for ${widgetPath} */
+          const { h, render } = window.preact;
+          import { useState } from 'https://cdn.skypack.dev/preact/hooks';
+      
+          const IpfsImageUpload = (props) => {
+            return h('span', props, 'loading IpfsImageUpload...');
+          }
+      
+          function Widget({ src, props }) {
+            return h('div', props, 'loading ' + src + '...');
+          }
+      
+          function WidgetWrapper() {
+            try {
+      
+              // const [state, setState] = useState({});
+              let state = {};
+
+              /* NS shims */
+              const context = { accountId: 'andyh.near' };
+              const props = {};
+              const State = {
+                init(obj) { state = obj; },
+                update(newState, initialState) {
+                  console.log('updating state!')
+                  state = newState;
+                },
+              };
+              const Social = {
+                get(url) {
+                  return undefined;
+                },
+                getr(url) {
+                  return null;
+                },
+                index(action, key, options) {
+                  return null;
+                },
+                keys(path) {
+                  return null;
+                }
+              };
+              const React = {
+                Fragment: 'div',
+              };
+              const styled = {
+                div: (s) => 'div',
+              };
+
+              return (
+                /* BEGIN EXTERNAL SOURCE */
+                ${scriptSrc}
+                /* END EXTERNAL SOURCE */
+              )();
+            } catch (e) {
+              return h('div', {}, 'failed to load ${widgetPath}: ' + e.toString());
+            }
+          }
+      
+          // let node = WidgetWrapper();
+          // if (!node) {
+          //   node = h('span', {}, '<null>');
+          // }
+          //
+          // if (typeof node === 'string') {
+          //   node = h('span', {}, 'component returned string: "' + node + '"');
+          // }
+      
+          render(WidgetWrapper(), document.getElementById('${id}'));
         </script>
       </body>
     </html>

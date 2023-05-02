@@ -15,7 +15,7 @@ export function getIframeId(id: string) {
     return `iframe-${id}`;
 }
 
-export function Widget({ id, sourceUrl }: { id: string, sourceUrl: string }) {
+export function Widget({ id, sourceUrl, widgetProps }: { id: string, sourceUrl: string, widgetProps: any }) {
     const [source, setSource] = useState(null);
 
     useEffect(() => {
@@ -34,6 +34,7 @@ export function Widget({ id, sourceUrl }: { id: string, sourceUrl: string }) {
         <SandboxedIframe
             id={getIframeId(id)}
             scriptSrc={source}
+            widgetProps={widgetProps}
         />
     );
 }

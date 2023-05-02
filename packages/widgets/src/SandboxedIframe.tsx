@@ -1,5 +1,6 @@
-function buildSandboxedWidget(id: string, scriptSrc: string) {
+function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scriptSrc: string, widgetProps: any }) {
   const widgetPath = id.split('::')[0];
+  const jsonWidgetProps = widgetProps ? JSON.stringify(widgetProps) : '{}';
 
   return `
     <html>
@@ -106,29 +107,13 @@ function buildSandboxedWidget(id: string, scriptSrc: string) {
           function Widget({ src, props }) {
             return h('div', props, 'loading ' + src + '...');
           }
-      
-          function ExternalWidget({
-            context,
-            props,
-            React,
-            Social,
-            state,
-            State,
-            styled,
-          }) {
-            return (
-              /* BEGIN EXTERNAL SOURCE */
-              ${scriptSrc}
-              /* END EXTERNAL SOURCE */
-            )();
-          }    
 
           let isStateInitialized = false;
           let state = {};
 
           /* NS shims */
           const context = { accountId: 'andyh.near' };
-          const props = {};
+          const props = JSON.parse('${jsonWidgetProps}');
           const State = {
             init(obj) {
               if (!isStateInitialized) {
@@ -190,7 +175,7 @@ function buildSandboxedWidget(id: string, scriptSrc: string) {
   `;
 }
 
-export function SandboxedIframe({ id, scriptSrc }: { id: string, scriptSrc: string }) {
+export function SandboxedIframe({ id, scriptSrc, widgetProps }: { id: string, scriptSrc: string, widgetProps: any }) {
     return (
         <iframe
             id={id}
@@ -205,7 +190,7 @@ export function SandboxedIframe({ id, scriptSrc }: { id: string, scriptSrc: stri
             ].join('; ')}
             height={0}
             sandbox='allow-scripts'
-            srcDoc={buildSandboxedWidget(id.replace('iframe-', ''), scriptSrc)}
+            srcDoc={buildSandboxedWidget({ id: id.replace("iframe-", ""), scriptSrc, widgetProps })}
             title='code-container'
             width={0}
             style={{ border: 'none' }}

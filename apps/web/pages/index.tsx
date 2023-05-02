@@ -133,9 +133,9 @@ export default function Web() {
         />
         {
           Object.entries(widgets)
-            .map(([widgetId, { sourceUrl }]) => (
+            .map(([widgetId, { props, sourceUrl }]) => (
               <div key={widgetId}>
-                <Widget id={widgetId} sourceUrl={sourceUrl} />
+                <Widget id={widgetId} sourceUrl={sourceUrl} widgetProps={props} />
               </div>
             ))
         }

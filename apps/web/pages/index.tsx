@@ -51,26 +51,43 @@ export default function Web() {
     }
   };
 
-  const createChildElements = ({ children, depth, index, parentId }: { children: any, depth: number, index?: number, parentId: string }): any => {
+  const createChildElements = ({ children, depth, index, parentId }: { children?: any, depth: number, index?: number, parentId: string }): any => {
+    // `children` is a literal
     if (typeof children === 'string' || typeof children === 'number') {
       return children;
     }
 
+    // `children` is (non-zero) falsy
     if (!children) {
       return '';
     }
 
+    // `children` is a single component
     if (children.type) {
       const { type, props: { children: subChildren, ...props } } = children;
+      const childProps = {
+        ...deserializeProps({ id: parentId, props }),
+        key: `${parentId}-${depth}-${index}`
+      };
 
-      return React.createElement(type, {
-        ...deserializeProps({
-          id: parentId, props }),
-          key: `${parentId}-${depth}-${index}`
-      }, createChildElements({ children: subChildren, depth: depth + 1, parentId }));
+      if (!subChildren || !subChildren.filter((c: any) => c !== undefined).length) {
+        return React.createElement(type, childProps);
+      }
+
+      return React.createElement(type, childProps, createChildElements({
+        children: subChildren,
+        depth: depth + 1,
+        parentId,
+      }));
     }
 
-    return children.map((child: any, i: number) => createChildElements({ children: child, depth: depth + 1, index: i, parentId }));
+    // `children` is an array of components and/or primitives
+    return children.map((child: any, i: number) => createChildElements({
+      children: child,
+      depth: depth + 1,
+      index: i,
+      parentId,
+    }));
   };
 
   useEffect(() => {
@@ -85,7 +102,7 @@ export default function Web() {
           const { id, node } = data;
           const { children, ...props } = node?.props || { children: [] };
 
-          const componentChildren = createChildElements({ children, depth: 0, parentId: id })
+          const componentChildren = createChildElements({ children, depth: 0, parentId: id });
           createAndMountElement({
             children: [
               React.createElement('span', { className: 'dom-label' }, `[${id.split('::')[0]}]`),
@@ -101,12 +118,21 @@ export default function Web() {
         } else if (data.type === 'widget.load') {
           const { props, source, widgetId } = data;
 
-          widgets[widgetId] = {
+          if (!widgets[widgetId]) {
+            widgets[widgetId] = {
               props,
               sourceUrl: `${LOCAL_PROXY_WIDGET_URL_PREFIX}/${source}`,
-          };
-          setWidgetCount(Object.keys(widgets).length);
-          console.log(`mounted root DOM for ${source}`);
+            };
+
+            setWidgetCount(Object.keys(widgets).length);
+            console.log(`mounted root DOM for ${source}`);
+          } else {
+            const iframe = document.getElementById(getIframeId(widgetId)) as HTMLIFrameElement;
+            iframe?.contentWindow?.postMessage({
+              props,
+              type: 'widget.update',
+            }, '*');
+          }
           setUpdates(updates + widgetId);
         }
       } catch (e) {

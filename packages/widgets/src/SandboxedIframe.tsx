@@ -9,7 +9,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
         <script type="module">
           /* generated code for ${widgetPath} */
           const callbacks = {};
-          function serializeNode(node) {
+          function serializeNode(node, index) {
             let { type } = node;
             const { children, ...props } = node.props;
             const unifiedChildren = Array.isArray(children)
@@ -24,7 +24,10 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                 type = 'div';
               } else if (component === 'Widget') {
                 const { src, props: widgetProps } = props;
-                const widgetId = src + '::' + window.crypto.randomUUID();
+                // FIXME this breaks when the order of children changes
+                //  needs a deterministic key (hash the internal widget state?)
+                //  to distinguish between sibling widgets with the same source
+                const widgetId = src + '::' + index;
                 try {
                   window.parent.postMessage({
                     parentId: '${id}',
@@ -75,7 +78,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                 ...transferableProps,
                 children: unifiedChildren
                   .flat()
-                  .map((c) => c && c.props ? serializeNode(c) : c),
+                  .map((c, i) => c && c.props ? serializeNode(c, i) : c),
               },
             }
           }
@@ -113,7 +116,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
 
           /* NS shims */
           const context = { accountId: 'andyh.near' };
-          const props = JSON.parse('${jsonWidgetProps}');
+          let props = JSON.parse('${jsonWidgetProps}');
           const State = {
             init(obj) {
               if (!isStateInitialized) {
@@ -162,9 +165,17 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           render(WidgetWrapper(), document.getElementById('${id}'));
 
           function processEvent(event) {
+            let shouldRender = false;
             if (callbacks[event.data?.method]) {
               callbacks[event.data.method]();
-              render(WidgetWrapper(), document.getElementById('${id}'));              
+              shouldRender = true;              
+            } else if (event.data.type === 'widget.update') {
+              props = event.data.props;
+              shouldRender = true;
+            }
+
+            if (shouldRender) {
+              render(WidgetWrapper(), document.getElementById('${id}'));
             }
           }
 

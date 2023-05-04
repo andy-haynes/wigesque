@@ -92,7 +92,7 @@ export async function compileWidget(widgetPath) {
   return replaceComponents({
     source: await transpileWidget(widgetPath),
     components: {
-      IpfsImageUpload: '__renderBuiltin',
+      // IpfsImageUpload: '__renderBuiltin',
       // Widget: '__renderWidget',
     },
   });

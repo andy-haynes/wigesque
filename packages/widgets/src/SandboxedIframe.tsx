@@ -21,7 +21,6 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           };
 
           const callbacks = {};
-          let rootWidgetProps = JSON.parse('${jsonWidgetProps}');
 
           function serializeProps({ props, index, widgetId }) {
             return Object.entries(props)
@@ -165,7 +164,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           }
 
           /* NS shims */
-          let props = buildProps(JSON.parse('${jsonWidgetProps}'));
+          let props = buildProps(JSON.parse("${jsonWidgetProps.replace(/"/g, '\\"')}"));
 
           const context = { accountId: 'andyh.near' };
           const State = {

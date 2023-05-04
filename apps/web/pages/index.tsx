@@ -110,7 +110,7 @@ export default function Web() {
         const { data } = event;
         if (data.type === 'widget.render') {
           /* a widget has been rendered and is ready to be updated in the outer window */
-          const { id, node } = data;
+          const { id, childWidgets, node } = data;
           const { children, ...props } = node?.props || { children: [] };
 
           const componentChildren = createChildElements({ children, depth: 0, parentId: id });
@@ -124,36 +124,37 @@ export default function Web() {
             props,
             type: node.type,
           });
+
+          childWidgets.forEach(({ widgetId, props: widgetProps, source }: { widgetId: string, props: any, source: string }) => {
+            /*
+              a widget is being rendered by a parent widget, either:
+              - this widget is being loaded for the first time
+              - the parent widget has updated and is re-rendering this widget
+            */
+            if (!widgets[widgetId]) {
+              /* widget code has not yet been loaded, add to cache and load */
+              widgets[widgetId] = {
+                parentId: id,
+                props: widgetProps,
+                sourceUrl: `${LOCAL_PROXY_WIDGET_URL_PREFIX}/${source}`,
+              };
+
+              setWidgetCount(Object.keys(widgets).length);
+            } else {
+              console.log({ parentId: id, widgetId })
+              /* widget iframe is already loaded, post update message to iframe */
+              postMessageToChildIframe({
+                id: widgetId,
+                message: {
+                  props,
+                  type: 'widget.update',
+                },
+                targetOrigin: '*',
+              })
+            }
+          });
+
           setUpdates(updates + id);
-        } else if (data.type === 'widget.load') {
-          /*
-            a widget is being rendered by a parent widget, either:
-            - this widget is being loaded for the first time
-            - the parent widget has updated and is re-rendering this widget
-          */
-          const { parentId, props, source, widgetId } = data;
-
-          if (!widgets[widgetId]) {
-            /* widget code has not yet been loaded, add to cache and load */
-            widgets[widgetId] = {
-              parentId,
-              props,
-              sourceUrl: `${LOCAL_PROXY_WIDGET_URL_PREFIX}/${source}`,
-            };
-
-            setWidgetCount(Object.keys(widgets).length);
-          } else {
-            /* widget iframe is already loaded, post update message to iframe */
-            postMessageToChildIframe({
-              id: widgetId,
-              message: {
-                props,
-                type: 'widget.update',
-              },
-              targetOrigin: '*',
-            })
-          }
-          setUpdates(updates + widgetId);
         } else if (data.type === 'widget.parentCallback') {
           /*
             a widget has invoked a callback passed to it as props by its parent widget

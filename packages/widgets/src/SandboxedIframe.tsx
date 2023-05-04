@@ -53,7 +53,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
               });
           }
 
-          function serializeNode(node, index) {
+          function serializeNode(node, index, childWidgets) {
             let { type } = node;
             const { children, ...props } = node.props;
             const unifiedChildren = Array.isArray(children)
@@ -75,13 +75,11 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                 //  to distinguish between sibling widgets with the same source
                 const widgetId = src + '::' + index + '::${id}';
                 try {
-                  window.parent.postMessage({
-                    parentId: '${id}',
+                  childWidgets.push({
                     props: widgetProps ? serializeProps({ props: widgetProps, index, widgetId }) : {},
                     source: src,
-                    type: 'widget.load',
                     widgetId,
-                  }, '*');
+                  });
                 } catch (error) {
                   console.warn('failed to dispatch widget load for ${id}', { error, widgetProps });
                 }
@@ -102,16 +100,18 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                 ...serializeProps({ props, index }),
                 children: unifiedChildren
                   .flat()
-                  .map((c, i) => c && c.props ? serializeNode(c, i) : c),
+                  .map((c, i) => c && c.props ? serializeNode(c, i, childWidgets) : c),
               },
+              childWidgets,
             }
           }
 
           const dispatchRenderEvent = (node) => {
-            const serialized = serializeNode(node);
+            const { childWidgets, ...serialized } = serializeNode(node, -1, []);
             try {
               window.parent.postMessage({
                 id: '${id}',
+                childWidgets,
                 node: serialized,
                 type: 'widget.render'
               }, '*');

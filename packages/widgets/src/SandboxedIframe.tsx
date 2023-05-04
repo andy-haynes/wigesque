@@ -9,8 +9,9 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
         <script type="module">
           /* generated code for ${widgetPath} */
           const callbacks = {};
+          let rootWidgetProps = JSON.parse('${jsonWidgetProps}');
 
-          function serializeProps(props, index) {
+          function serializeProps({ props, index, widgetId }) {
             return Object.entries(props)
               .reduce((newProps, [key, value]) => {
                 if (typeof value !== 'function') {
@@ -18,18 +19,27 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                   return newProps;
                 }
 
-                if (!newProps.__callbacks) {
-                  newProps.__callbacks = {};
+                // [widgetId] only applies to props on widgets, use method
+                // body to distinguish between non-widget callbacks
+                const fnKey = key + '::' + (widgetId || value.toString().replace(/\\n/g, ''));
+                callbacks[fnKey] = value;
+
+                if (widgetId) {
+                  newProps.__widgetcallbacks[key] = {
+                    method: fnKey,
+                    parentId: '${id}',
+                  };
+                } else { 
+                  newProps.__callbacks[key] = {
+                    method: fnKey,
+                  };                  
                 }
 
-                const fnKey = key + '::' + value.toString();
-                callbacks[fnKey] = value;
-                newProps.__callbacks[fnKey] = {
-                  method: fnKey,
-                };
-
                 return newProps;
-              }, {});
+              }, {
+                __callbacks: {},
+                __widgetcallbacks: {},
+              });
           }
 
           function serializeNode(node, index) {
@@ -50,13 +60,11 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                 // FIXME this breaks when the order of children changes
                 //  needs a deterministic key (hash the internal widget state?)
                 //  to distinguish between sibling widgets with the same source
-                const widgetId = src + '::' + index;
+                const widgetId = src + '::' + index + '::${id}';
                 try {
                   window.parent.postMessage({
                     parentId: '${id}',
-                    // TODO implement callbacks
-                    props: JSON.parse(JSON.stringify(widgetProps || {})),
-                    // props: widgetProps,
+                    props: widgetProps ? serializeProps({ props: widgetProps, index, widgetId }) : {},
                     source: src,
                     type: 'widget.load',
                     widgetId,
@@ -68,7 +76,6 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                 return {
                   type: 'div',
                   props: {
-                    ...props,
                     id: 'dom-' + widgetId,
                     className: 'iframe',
                   },
@@ -79,7 +86,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             return {
               type,
               props: {
-                ...serializeProps(props, index),
+                ...serializeProps({ props, index }),
                 children: unifiedChildren
                   .flat()
                   .map((c, i) => c && c.props ? serializeNode(c, i) : c),
@@ -88,7 +95,6 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           }
 
           const dispatchRenderEvent = (node) => {
-            console.log('++++++++++++++++++++++++ RENDERING ${widgetPath} ++++++++++++++++++++++++');
             const serialized = serializeNode(node);
             try {
               window.parent.postMessage({
@@ -118,9 +124,32 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           let isStateInitialized = false;
           let state = {};
 
+          /*
+            build props object based on input props
+            add methods corresponding to parent widget callbacks
+          */
+          function buildProps(props) {
+            const { __widgetcallbacks, ...widgetProps } = props;
+            return {
+              ...widgetProps,
+              ...Object.entries(__widgetcallbacks || {}).reduce((widgetCallbacks, [methodName, callbackMeta]) => {
+                if (props[methodName]) {
+                  throw new Error('duplicate props key "' + methodName + '" on ${id}');
+                }
+  
+                widgetCallbacks[methodName] = () => window.parent.postMessage({
+                  ...callbackMeta,
+                  type: 'widget.parentCallback',
+                }, '*');
+                return widgetCallbacks;
+              }, {}),
+            };
+          }
+
           /* NS shims */
+          let props = buildProps(JSON.parse('${jsonWidgetProps}'));
+
           const context = { accountId: 'andyh.near' };
-          let props = JSON.parse('${jsonWidgetProps}');
           const State = {
             init(obj) {
               if (!isStateInitialized) {
@@ -170,12 +199,25 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
 
           function processEvent(event) {
             let shouldRender = false;
-            if (callbacks[event.data?.method]) {
-              callbacks[event.data.method]();
-              shouldRender = true;              
-            } else if (event.data.type === 'widget.update') {
-              props = event.data.props;
-              shouldRender = true;
+            switch (event.data.type) {
+              case 'widget.callback': {
+                if (!callbacks[event.data.method]) {
+                  console.error('No method "' + event.data.method + '" on widget ${id}');
+                  return;
+                }
+
+                callbacks[event.data.method]();
+                shouldRender = true;
+                break;
+              }
+              case 'widget.update': {
+                props = buildProps(event.data.props);
+                shouldRender = true;
+                break;
+              }
+              default: {
+                return;
+              }
             }
 
             if (shouldRender) {

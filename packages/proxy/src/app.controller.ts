@@ -6,15 +6,6 @@ import { fetchWidgetSource, transpileWidget } from './transpiler';
 export class AppController {
   @Get('widget/:accountId/widget/:widgetId')
   async getNSWidget(@Param('accountId') accountId: string, @Param('widgetId') widgetId: string) {
-    const blacklist = [
-      'ComponentSearch',
-      'ProfileSearch',
-    ];
-    if (blacklist.includes(widgetId)) {
-      return {
-        source: "function wtfEver() { return h('span', {}, 'I am a bad widget and I break the page') }",
-      };
-    }
     return {
       source: await transpileWidget(`${accountId}/widget/${widgetId}`),
     };

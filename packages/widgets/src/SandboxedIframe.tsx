@@ -8,6 +8,18 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
         <div id="${id}"></div>
         <script type="module">
           /* generated code for ${widgetPath} */
+          // TODO implement these for real
+          const BUILTIN_COMPONENTS = {
+            CommitButton: {
+              type: 'button',
+              children: 'CommitButton',
+            },
+            IpfsImageUpload: {
+              type: 'button',
+              children: 'IpfsImageUpload',
+            },
+          };
+
           const callbacks = {};
           let rootWidgetProps = JSON.parse('${jsonWidgetProps}');
 
@@ -53,8 +65,10 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
               type = 'div';
             } else if (typeof type === 'function') {
               const { name: component } = type;
-              if (component === '_' || component === 'IpfsImageUpload') {
+              if (component === '_') {
                 type = 'div';
+              } else if (BUILTIN_COMPONENTS[component]) {
+                type = BUILTIN_COMPONENTS[component].type;
               } else if (component === 'Widget') {
                 const { src, props: widgetProps } = props;
                 // FIXME this breaks when the order of children changes
@@ -112,6 +126,10 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           /* END PREACT FORK */
 
           const { h, render } = window.preact;
+      
+          const CommitButton = (props) => {
+            return h('span', props, 'loading CommitButton...');
+          }
       
           const IpfsImageUpload = (props) => {
             return h('span', props, 'loading IpfsImageUpload...');

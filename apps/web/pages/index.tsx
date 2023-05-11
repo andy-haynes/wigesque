@@ -146,7 +146,7 @@ export default function Web() {
               postMessageToChildIframe({
                 id: widgetId,
                 message: {
-                  props,
+                  props: widgetProps,
                   type: 'widget.update',
                 },
                 targetOrigin: '*',

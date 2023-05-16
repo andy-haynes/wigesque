@@ -20,17 +20,23 @@ function deserializeProps({ id, props }: { id: string, props: any }): any {
 
   Object.entries(props.__callbacks)
     .forEach(([propKey, callback]: [string, any]) => {
-      props[propKey.split('::')[0]] = (e: any) => {
+      props[propKey.split('::')[0]] = (...args: any[]) => {
+        let serializedArgs: any = args;
+        // is this a DOM event?
+        if (args[0]?.target) {
+          serializedArgs = {
+            event: {
+              target: {
+                value: args[0].target?.value,
+              },
+            },
+          }
+        }
+
         postMessageToChildIframe({
           id,
           message: {
-            args: {
-              event: {
-                target: {
-                  value: e.target?.value,
-                },
-              },
-            },
+            args: serializedArgs,
             method: callback.method,
             type: 'widget.callback',
           },

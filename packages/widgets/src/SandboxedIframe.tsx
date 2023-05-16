@@ -154,10 +154,27 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                   throw new Error('duplicate props key "' + methodName + '" on ${id}');
                 }
   
-                widgetCallbacks[methodName] = () => window.parent.postMessage({
-                  ...callbackMeta,
-                  type: 'widget.parentCallback',
-                }, '*');
+                widgetCallbacks[methodName] = (...args) => { 
+                  // any function arguments are closures in this child widget scope
+                  // and must be cached in the widget iframe
+                  window.parent.postMessage({
+                    ...callbackMeta,
+                    callbackArgs: (args || []).map((arg) => {
+                      if (typeof arg !== 'function') {
+                        return arg;
+                      }
+
+                      const callbackBody = arg.toString().replace(/\\n/g, '');
+                      callbacks[callbackBody] = arg;
+                      return {
+                        method: callbackBody,
+                      };
+                    }),
+                    widgetId: '${id}',
+                    type: 'widget.parentCallback',
+                  }, '*');
+                }
+
                 return widgetCallbacks;
               }, {}),
             };
@@ -175,7 +192,12 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
               }
             },
             update(newState, initialState) {
-              state = newState;
+              console.log({ newState })
+              // TODO real implementation
+              state = {
+                ...state,
+                ...newState,
+              };
             },
           };
           const Social = {
@@ -200,8 +222,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           };
 
           function WidgetWrapper() {
-            try {  
-
+            try {
               return (
                 /* BEGIN EXTERNAL SOURCE */
                 ${scriptSrc}
@@ -218,12 +239,42 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             let shouldRender = false;
             switch (event.data.type) {
               case 'widget.callback': {
-                if (!callbacks[event.data.method]) {
-                  console.error('No method "' + event.data.method + '" on widget ${id}');
+                let { args, callbackArgs, method } = event.data;
+                if (!callbacks[method]) {
+                  console.error('No method "' + method + '" on widget ${id}');
                   return;
                 }
 
-                callbacks[event.data.method]();
+                if (callbackArgs?.length) {
+                  args = (...childArgs) => {
+                    window.parent.postMessage({
+                      args: childArgs,
+                      callbackArgs,
+                      method,
+                      type: 'widget.callback',
+                      widgetId: method.split('::').slice(1).join('::'),
+                    }, '*');
+                  };
+                }
+
+                const callback = callbacks[method];
+                if (args === undefined) {
+                  callback();
+                } else if (Array.isArray(args)) {
+                  callback(...args);
+                } else if (args.event) {
+                  callback(args.event);
+                } else if (args) {
+                  // FIXME
+                  if (args.event) {
+                    // unwrap event
+                    callback(args.event);
+                  } else {
+                    callback(args);                    
+                  }
+                } else {
+                  console.error('Unknown args pattern', { args });
+                }
                 shouldRender = true;
                 break;
               }

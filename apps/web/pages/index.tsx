@@ -147,7 +147,6 @@ export default function Web() {
 
               setWidgetCount(Object.keys(widgets).length);
             } else {
-              console.log({ parentId: id, widgetId })
               /* widget iframe is already loaded, post update message to iframe */
               postMessageToChildIframe({
                 id: widgetId,
@@ -162,16 +161,35 @@ export default function Web() {
 
           setUpdates(updates + id);
         } else if (data.type === 'widget.parentCallback') {
+          // FIXME merge w/ widget.callback below
           /*
             a widget has invoked a callback passed to it as props by its parent widget
             post a widget callback message to the parent iframe
           */
-          const { method, parentId } = data;
+          const { callbackArgs, method, parentId } = data;
           postMessageToChildIframe({
             id: parentId,
             message: {
-              // TODO args
+              // TODO args?
+              args: {},
+              callbackArgs,
               method,
+              type: 'widget.callback'
+            },
+            targetOrigin: '*',
+          });
+        } else if (data.type === 'widget.callback') {
+          /*
+            a widget has invoked a callback passed to it as props by its parent widget
+            post a widget callback message to the parent iframe
+          */
+          const { callbackArgs, widgetId } = data;
+          postMessageToChildIframe({
+            id: widgetId,
+            message: {
+              // TODO args?
+              args: {},
+              method: callbackArgs[0].method,
               type: 'widget.callback'
             },
             targetOrigin: '*',

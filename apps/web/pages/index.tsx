@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 
 const LOCAL_PROXY_WIDGET_URL_PREFIX = 'http://localhost:3001/widget';
-const rootWidgetPath = 'mob.near/widget/Homepage'
+const rootWidgetPath = 'andyh.near/widget/RenderTestRoot'
 
 const roots = {} as { [key: string]: any };
 const widgets = {} as { [key: string]: any };
@@ -160,37 +160,21 @@ export default function Web() {
           });
 
           setUpdates(updates + id);
-        } else if (data.type === 'widget.parentCallback') {
-          // FIXME merge w/ widget.callback below
-          /*
-            a widget has invoked a callback passed to it as props by its parent widget
-            post a widget callback message to the parent iframe
-          */
-          const { callbackArgs, method, parentId } = data;
-          postMessageToChildIframe({
-            id: parentId,
-            message: {
-              // TODO args?
-              args: {},
-              callbackArgs,
-              method,
-              type: 'widget.callback'
-            },
-            targetOrigin: '*',
-          });
         } else if (data.type === 'widget.callback') {
           /*
             a widget has invoked a callback passed to it as props by its parent widget
             post a widget callback message to the parent iframe
           */
-          const { callbackArgs, widgetId } = data;
+          const { callbackArgs, method, targetId } = data;
           postMessageToChildIframe({
-            id: widgetId,
+            id: targetId,
             message: {
               // TODO args?
               args: {},
-              method: callbackArgs[0].method,
-              type: 'widget.callback'
+              callbackArgs,
+              method,
+              targetId,
+              type: 'widget.callback',
             },
             targetOrigin: '*',
           });

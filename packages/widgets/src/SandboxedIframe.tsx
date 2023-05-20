@@ -149,7 +149,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             const { __widgetcallbacks, ...widgetProps } = props;
             return {
               ...widgetProps,
-              ...Object.entries(__widgetcallbacks || {}).reduce((widgetCallbacks, [methodName, callbackMeta]) => {
+              ...Object.entries(__widgetcallbacks || {}).reduce((widgetCallbacks, [methodName, { method, parentId }]) => {
                 if (props[methodName]) {
                   throw new Error('duplicate props key "' + methodName + '" on ${id}');
                 }
@@ -170,8 +170,9 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                         method: callbackBody,
                       };
                     }),
-                    widgetId: '${id}',
-                    type: 'widget.parentCallback',
+                    method, // the key on the props object passed to this Widget
+                    targetId: parentId,
+                    type: 'widget.callback',
                   }, '*');
                 }
 
@@ -192,7 +193,6 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
               }
             },
             update(newState, initialState) {
-              console.log({ newState })
               // TODO real implementation
               state = {
                 ...state,
@@ -239,7 +239,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             let shouldRender = false;
             switch (event.data.type) {
               case 'widget.callback': {
-                let { args, callbackArgs, method } = event.data;
+                let { args, callbackArgs, method, targetId } = event.data;
                 if (!callbacks[method]) {
                   console.error('No method "' + method + '" on widget ${id}');
                   return;
@@ -250,9 +250,9 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                     window.parent.postMessage({
                       args: childArgs,
                       callbackArgs,
-                      method,
+                      method: callbackArgs[0].method,
+                      targetId: method.split('::').slice(1).join('::'),
                       type: 'widget.callback',
-                      widgetId: method.split('::').slice(1).join('::'),
                     }, '*');
                   };
                 }

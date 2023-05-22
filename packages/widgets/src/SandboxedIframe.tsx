@@ -53,6 +53,41 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
               });
           }
 
+          function deserializeProps(props) {
+            const { __widgetcallbacks, ...widgetProps } = props;
+            return {
+              ...widgetProps,
+              ...Object.entries(__widgetcallbacks || {}).reduce((widgetCallbacks, [methodName, { method, parentId }]) => {
+                if (props[methodName]) {
+                  throw new Error('duplicate props key "' + methodName + '" on ${id}');
+                }
+  
+                widgetCallbacks[methodName] = (...args) => { 
+                  // any function arguments are closures in this child widget scope
+                  // and must be cached in the widget iframe
+                  window.parent.postMessage({
+                    callbackArgs: (args || []).map((arg) => {
+                      if (typeof arg !== 'function') {
+                        return arg;
+                      }
+
+                      const callbackBody = arg.toString().replace(/\\n/g, '');
+                      callbacks[callbackBody] = arg;
+                      return {
+                        method: callbackBody,
+                      };
+                    }),
+                    method, // the key on the props object passed to this Widget
+                    targetId: parentId,
+                    type: 'widget.callback',
+                  }, '*');
+                }
+
+                return widgetCallbacks;
+              }, {}),
+            };
+          }
+
           function serializeNode(node, index, childWidgets) {
             let { type } = node;
             const { children, ...props } = node.props;
@@ -181,7 +216,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           }
 
           /* NS shims */
-          let props = buildProps(JSON.parse("${jsonWidgetProps.replace(/"/g, '\\"')}"));
+          let props = deserializeProps(JSON.parse("${jsonWidgetProps.replace(/"/g, '\\"')}"));
 
           const context = { accountId: 'andyh.near' };
           const State = {
@@ -283,7 +318,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                 break;
               }
               case 'widget.update': {
-                props = buildProps(event.data.props);
+                props = deserializeProps(event.data.props);
                 shouldRender = true;
                 break;
               }

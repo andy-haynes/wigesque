@@ -165,12 +165,11 @@ export default function Web() {
             a widget has invoked a callback passed to it as props by its parent widget
             post a widget callback message to the parent iframe
           */
-          const { callbackArgs, method, targetId } = data;
+          const { args, callbackArgs, method, targetId } = data;
           postMessageToChildIframe({
             id: targetId,
             message: {
-              // TODO args?
-              args: callbackArgs.map((cb: any) => cb.method),
+              args: args || callbackArgs.map((cb: any) => cb.method ? cb.method : cb),
               callbackArgs,
               method,
               targetId,

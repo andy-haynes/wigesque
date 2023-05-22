@@ -158,7 +158,6 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                   // any function arguments are closures in this child widget scope
                   // and must be cached in the widget iframe
                   window.parent.postMessage({
-                    ...callbackMeta,
                     callbackArgs: (args || []).map((arg) => {
                       if (typeof arg !== 'function') {
                         return arg;
@@ -246,15 +245,20 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                 }
 
                 if (callbackArgs?.length) {
-                  args = (...childArgs) => {
-                    window.parent.postMessage({
+                  args = args.map((arg) => {
+                    // does this argument correspond to a callback argument?
+                    if (!callbackArgs.find((callbackArg) => callbackArg.method === arg)) {
+                      return arg;
+                    }
+
+                    return (...childArgs) => window.parent.postMessage({
                       args: childArgs,
                       callbackArgs,
-                      method: callbackArgs[0].method,
+                      method: arg,
                       targetId: method.split('::').slice(1).join('::'),
                       type: 'widget.callback',
                     }, '*');
-                  };
+                  });
                 }
 
                 const callback = callbacks[method];

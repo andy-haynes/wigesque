@@ -170,7 +170,7 @@ export default function Web() {
             id: targetId,
             message: {
               // TODO args?
-              args: {},
+              args: callbackArgs.map((cb: any) => cb.method),
               callbackArgs,
               method,
               targetId,

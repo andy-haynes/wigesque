@@ -263,7 +263,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                 /* END EXTERNAL SOURCE */
               )();
             } catch (e) {
-              return h('div', {}, 'failed to load ${widgetPath}: ' + e.toString());
+              return h('div', {}, 'failed to load ${widgetPath}: ' + e.toString() + '\\n\\n' + e.stack);
             }
           }
       

@@ -176,45 +176,6 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           let isStateInitialized = false;
           let state = {};
 
-          /*
-            build props object based on input props
-            add methods corresponding to parent widget callbacks
-          */
-          function buildProps(props) {
-            const { __widgetcallbacks, ...widgetProps } = props;
-            return {
-              ...widgetProps,
-              ...Object.entries(__widgetcallbacks || {}).reduce((widgetCallbacks, [methodName, { method, parentId }]) => {
-                if (props[methodName]) {
-                  throw new Error('duplicate props key "' + methodName + '" on ${id}');
-                }
-  
-                widgetCallbacks[methodName] = (...args) => { 
-                  // any function arguments are closures in this child widget scope
-                  // and must be cached in the widget iframe
-                  window.parent.postMessage({
-                    callbackArgs: (args || []).map((arg) => {
-                      if (typeof arg !== 'function') {
-                        return arg;
-                      }
-
-                      const callbackBody = arg.toString().replace(/\\n/g, '');
-                      callbacks[callbackBody] = arg;
-                      return {
-                        method: callbackBody,
-                      };
-                    }),
-                    method, // the key on the props object passed to this Widget
-                    targetId: parentId,
-                    type: 'widget.callback',
-                  }, '*');
-                }
-
-                return widgetCallbacks;
-              }, {}),
-            };
-          }
-
           /* NS shims */
           let props = deserializeProps(JSON.parse("${jsonWidgetProps.replace(/"/g, '\\"')}"));
 

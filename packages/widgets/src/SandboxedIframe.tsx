@@ -40,7 +40,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                     method: fnKey,
                     parentId: '${id}',
                   };
-                } else { 
+                } else {
                   newProps.__domcallbacks[key] = {
                     method: fnKey,
                   };                  
@@ -51,6 +51,21 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                 __domcallbacks: {},
                 __widgetcallbacks: {},
               });
+          }
+
+          function serializeArgs({ args, widgetId }) {
+            return (args || []).map((arg) => {
+              if (typeof arg !== 'function') {
+                return arg;
+              }
+  
+              const callbackBody = arg.toString().replace(/\\n/g, '');
+              const fnKey = callbackBody + '::' + widgetId;
+              callbacks[fnKey] = arg;
+              return {
+                method: fnKey,
+              };
+            });
           }
 
           function deserializeProps(props) {
@@ -66,17 +81,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                   // any function arguments are closures in this child widget scope
                   // and must be cached in the widget iframe
                   window.parent.postMessage({
-                    callbackArgs: (args || []).map((arg) => {
-                      if (typeof arg !== 'function') {
-                        return arg;
-                      }
-
-                      const callbackBody = arg.toString().replace(/\\n/g, '');
-                      callbacks[callbackBody] = arg;
-                      return {
-                        method: callbackBody,
-                      };
-                    }),
+                    args: serializeArgs({ args, widgetId: '${id}' }),
                     method, // the key on the props object passed to this Widget
                     targetId: parentId,
                     type: 'widget.callback',
@@ -234,26 +239,26 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             let shouldRender = false;
             switch (event.data.type) {
               case 'widget.callback': {
-                let { args, callbackArgs, method, targetId } = event.data;
+                let { args, method } = event.data;
                 if (!callbacks[method]) {
                   console.error('No method "' + method + '" on widget ${id}');
                   return;
                 }
 
-                if (callbackArgs?.length) {
+                if (typeof args?.some === 'function' && args.some((arg) => arg.method)) {
                   args = args.map((arg) => {
-                    // does this argument correspond to a callback argument?
-                    if (!callbackArgs.find((callbackArg) => callbackArg.method === arg)) {
+                    if (!arg.method) {
                       return arg;
                     }
 
-                    return (...childArgs) => window.parent.postMessage({
-                      args: childArgs,
-                      callbackArgs,
-                      method: arg,
-                      targetId: method.split('::').slice(1).join('::'),
-                      type: 'widget.callback',
-                    }, '*');
+                    return (...childArgs) => {
+                      window.parent.postMessage({
+                        args: serializeArgs({ args: childArgs, widgetId: '${id}' }),
+                        method: arg.method,
+                        targetId: arg.method.split('::').slice(1).join('::'),
+                        type: 'widget.callback',
+                      }, '*');
+                    };
                   });
                 }
 

@@ -41,14 +41,14 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                     parentId: '${id}',
                   };
                 } else { 
-                  newProps.__callbacks[key] = {
+                  newProps.__domcallbacks[key] = {
                     method: fnKey,
                   };                  
                 }
 
                 return newProps;
               }, {
-                __callbacks: {},
+                __domcallbacks: {},
                 __widgetcallbacks: {},
               });
           }

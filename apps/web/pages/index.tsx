@@ -14,11 +14,11 @@ function postMessageToChildIframe({ id, message, targetOrigin }: { id: string, m
 }
 
 function deserializeProps({ id, props }: { id: string, props: any }): any {
-  if (!props || !props.__callbacks) {
+  if (!props || !props.__domcallbacks) {
     return props;
   }
 
-  Object.entries(props.__callbacks)
+  Object.entries(props.__domcallbacks)
     .forEach(([propKey, callback]: [string, any]) => {
       props[propKey.split('::')[0]] = (...args: any[]) => {
         let serializedArgs: any = args;

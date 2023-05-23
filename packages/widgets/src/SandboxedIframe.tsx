@@ -37,12 +37,12 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
 
                 if (widgetId) {
                   newProps.__widgetcallbacks[key] = {
-                    method: fnKey,
+                    __widgetMethod: fnKey,
                     parentId: '${id}',
                   };
                 } else {
                   newProps.__domcallbacks[key] = {
-                    method: fnKey,
+                    __widgetMethod: fnKey,
                   };                  
                 }
 
@@ -63,7 +63,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
               const fnKey = callbackBody + '::' + widgetId;
               callbacks[fnKey] = arg;
               return {
-                method: fnKey,
+                __widgetMethod: fnKey,
               };
             });
           }
@@ -72,7 +72,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             const { __widgetcallbacks, ...widgetProps } = props;
             return {
               ...widgetProps,
-              ...Object.entries(__widgetcallbacks || {}).reduce((widgetCallbacks, [methodName, { method, parentId }]) => {
+              ...Object.entries(__widgetcallbacks || {}).reduce((widgetCallbacks, [methodName, { __widgetMethod, parentId }]) => {
                 if (props[methodName]) {
                   throw new Error('duplicate props key "' + methodName + '" on ${id}');
                 }
@@ -82,7 +82,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                   // and must be cached in the widget iframe
                   window.parent.postMessage({
                     args: serializeArgs({ args, widgetId: '${id}' }),
-                    method, // the key on the props object passed to this Widget
+                    method: __widgetMethod, // the key on the props object passed to this Widget
                     targetId: parentId,
                     type: 'widget.callback',
                   }, '*');
@@ -245,17 +245,18 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                   return;
                 }
 
-                if (typeof args?.some === 'function' && args.some((arg) => arg.method)) {
+                if (typeof args?.some === 'function' && args.some((arg) => arg.__widgetMethod)) {
                   args = args.map((arg) => {
-                    if (!arg.method) {
+                    const { __widgetMethod: widgetMethod } = arg;
+                    if (!widgetMethod) {
                       return arg;
                     }
 
                     return (...childArgs) => {
                       window.parent.postMessage({
                         args: serializeArgs({ args: childArgs, widgetId: '${id}' }),
-                        method: arg.method,
-                        targetId: arg.method.split('::').slice(1).join('::'),
+                        method: widgetMethod,
+                        targetId: widgetMethod.split('::').slice(1).join('::'),
                         type: 'widget.callback',
                       }, '*');
                     };

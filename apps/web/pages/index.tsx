@@ -37,7 +37,7 @@ function deserializeProps({ id, props }: { id: string, props: any }): any {
           id,
           message: {
             args: serializedArgs,
-            method: callback.method,
+            method: callback.__widgetMethod,
             type: 'widget.callback',
           },
           targetOrigin: '*',

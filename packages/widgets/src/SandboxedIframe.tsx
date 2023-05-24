@@ -200,18 +200,59 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
               };
             },
           };
-          const Social = {
-            get(url) {
-              return undefined;
-            },
-            getr(url) {
+
+          const __socialCache = {};
+          function cachedQuery({ apiEndpoint, body, cacheKey }) {
+              const cached = __socialCache[cacheKey];
+              if (cached || (cacheKey in __socialCache && cached === undefined)) {
+                return cached;
+              }
+
+              fetch(apiEndpoint, {
+                body: JSON.stringify(body),
+                headers: { 'Content-Type': 'application/json' },
+                method: 'POST',
+              })
+                .then((res) => res.json())
+                .then((json) => {
+                  console.log({ json });
+                  __socialCache[cacheKey] = Object.keys(json).length ? json : undefined;
+                  renderWidget();
+                })
+                .catch((e) => console.error({ error: e, params, id: '${id}' }));
+
               return null;
+          }
+
+          const Social = {
+            get(keys, finality, options) {
+              return cachedQuery({
+                apiEndpoint: 'https://api.near.social/get',
+                body: { keys: Array.isArray(keys) ? keys : [keys] },
+                cacheKey: JSON.stringify(keys),
+              });
+            },
+            getr(keys, finality, options) {
+              // TODO expand keys for recursive get
+              return cachedQuery({
+                apiEndpoint: 'https://api.near.social/get',
+                body: { keys: Array.isArray(keys) ? keys : [keys] },
+                cacheKey: JSON.stringify(keys),
+              });
             },
             index(action, key, options) {
-              return null;
+              return cachedQuery({
+                apiEndpoint: 'https://api.near.social/index',
+                body: { action, key, options },
+                cacheKey: JSON.stringify({ action, key, options }),
+              });
             },
-            keys(path) {
-              return null;
+            keys(keys, finality, options) {
+              return cachedQuery({
+                apiEndpoint: 'https://api.near.social/keys',
+                body: { keys: Array.isArray(keys) ? keys : [keys] },
+                cacheKey: JSON.stringify(keys),
+              });
             }
           };
           const React = {
@@ -233,7 +274,10 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             }
           }
       
-          render(WidgetWrapper(), document.getElementById('${id}'));
+          function renderWidget() {
+            render(WidgetWrapper(), document.getElementById('${id}'));
+          }
+          renderWidget();
 
           function processEvent(event) {
             let shouldRender = false;
@@ -295,7 +339,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             }
 
             if (shouldRender) {
-              render(WidgetWrapper(), document.getElementById('${id}'));
+              renderWidget();
             }
           }
 
@@ -314,7 +358,7 @@ export function SandboxedIframe({ id, scriptSrc, widgetProps }: { id: string, sc
             // @ts-expect-error: you're wrong about this one, TypeScript
             csp={[
                 "default-src 'self'",
-                "connect-src https://rpc.testnet.near.org",
+                "connect-src https://rpc.testnet.near.org https://api.near.social",
                 "script-src 'unsafe-inline' 'unsafe-eval'",
                 "script-src-elem https://cdnjs.cloudflare.com http://localhost http://localhost:3001 'unsafe-inline'",
                 '',

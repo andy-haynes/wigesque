@@ -4,19 +4,42 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
 
   return `
     <html>
+      <head>
+        <script src="https://cdn.jsdelivr.net/npm/near-api-js@2.1.3/dist/near-api-js.min.js"></script>
+      </head>
       <body>
         <div id="${id}"></div>
         <script type="module">
           /* generated code for ${widgetPath} */
           // TODO implement these for real
           const BUILTIN_COMPONENTS = {
+            Checkbox: {
+              type: 'div',
+              children: 'Checkbox',
+            },
             CommitButton: {
               type: 'button',
               children: 'CommitButton',
             },
+            Dialog: {
+              type: 'div',
+              children: 'Dialog',
+            },
+            DropdownMenu: {
+              type: 'div',
+              children: 'DropdownMenu',
+            },
+            InfiniteScroll: {
+              type: 'div',
+              children: 'InfiniteScroll',
+            },
             IpfsImageUpload: {
               type: 'button',
               children: 'IpfsImageUpload',
+            },
+            Markdown: {
+              type: 'div',
+              children: 'Markdown',
             },
           };
 
@@ -166,12 +189,32 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
 
           const { h, render } = window.preact;
       
+          const Checkbox = (props) => {
+            return h('span', props, 'loading Checkbox...');
+          }
+      
           const CommitButton = (props) => {
             return h('span', props, 'loading CommitButton...');
           }
       
           const IpfsImageUpload = (props) => {
             return h('span', props, 'loading IpfsImageUpload...');
+          }
+      
+          const Dialog = (props) => {
+            return h('span', props, 'loading Dialog...');
+          }
+      
+          const DropdownMenu = (props) => {
+            return h('span', props, 'loading Dialog...');
+          }
+      
+          const InfiniteScroll = (props) => {
+            return h('span', props, 'loading InfiniteScroll...');
+          }
+      
+          const Markdown = (props) => {
+            return h('span', props, 'loading Markdown...');
           }
       
           function Widget({ src, props }) {
@@ -183,6 +226,42 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
 
           /* NS shims */
           let props = deserializeProps(JSON.parse("${jsonWidgetProps.replace(/"/g, '\\"')}"));
+
+          function asyncFetch(url, options) {
+            return fetch(url, options)
+              .catch(console.error);
+          }
+
+          const provider = new window.nearApi.providers.JsonRpcProvider('https://rpc.near.org');
+          const __rpcRequests = {};
+          const Near = {
+            block(blockHeightOrFinality) {
+              const reqKey = JSON.stringify({ blockHeightOrFinality, type: 'block' });
+              const request = __rpcRequests[reqKey];
+              if (request || (reqKey in __rpcRequests && request === undefined)) {
+                delete __rpcRequests[reqKey];
+                return request;
+              }
+              provider.block({ finality: blockHeightOrFinality })
+                .then((block) => {
+                  __rpcRequests[reqKey] = block;
+                  renderWidget();
+                })
+                .catch(console.error);
+            },
+            call(contractName, methodName, args, gas, deposit) {},
+            view(contractName, methodName, args, blockId, subscribe) {},
+            asyncView(contractName, methodName, args, blockId, subscribe) {
+              console.log({ blockId })
+              return provider.query({
+                request_type: 'call_function',
+                finality: blockId,
+                account_id: contractName,
+                method_name: methodName,
+                args_base64: JSON.stringify(args).toString('base64')
+              });
+            },
+          };
 
           const context = { accountId: 'andyh.near' };
           const State = {
@@ -215,7 +294,6 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
               })
                 .then((res) => res.json())
                 .then((json) => {
-                  console.log({ json });
                   __socialCache[cacheKey] = Object.keys(json).length ? json : undefined;
                   renderWidget();
                 })
@@ -258,9 +336,27 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           const React = {
             Fragment: 'div',
           };
-          const styled = {
-            div: (s) => 'div',
+          function fadeIn() {}
+          function slideIn() {}
+          let minWidth;
+
+          function styled() { return 'div'; }
+          styled.a = (css) => 'a';
+          styled.button = (css) => 'button';
+          styled.div = (css) => {
+            try {
+              styles[css[0]] = true;                
+            } catch {}
+            return "div";
           };
+          styled.hr = (css) => 'hr';
+          styled.input = (css) => 'input';
+          styled.keyframes = (css) => 'keyframes';
+          styled.label = (css) => 'label';
+          styled.li = (css) => 'li';
+          styled.span = (css) => 'span';
+          styled.svg = (css) => 'svg';
+          styled.ul = (css) => 'ul';
 
           function WidgetWrapper() {
             try {
@@ -358,9 +454,9 @@ export function SandboxedIframe({ id, scriptSrc, widgetProps }: { id: string, sc
             // @ts-expect-error: you're wrong about this one, TypeScript
             csp={[
                 "default-src 'self'",
-                "connect-src https://rpc.testnet.near.org https://api.near.social",
+                "connect-src *",
                 "script-src 'unsafe-inline' 'unsafe-eval'",
-                "script-src-elem https://cdnjs.cloudflare.com http://localhost http://localhost:3001 'unsafe-inline'",
+                "script-src-elem https://cdnjs.cloudflare.com https://cdn.jsdelivr.net http://localhost http://localhost:3001 'unsafe-inline'",
                 '',
             ].join('; ')}
             height={0}

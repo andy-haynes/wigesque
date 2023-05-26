@@ -340,23 +340,13 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           function slideIn() {}
           let minWidth;
 
-          function styled() { return 'div'; }
-          styled.a = (css) => 'a';
-          styled.button = (css) => 'button';
-          styled.div = (css) => {
-            try {
-              styles[css[0]] = true;                
-            } catch {}
-            return "div";
-          };
-          styled.hr = (css) => 'hr';
-          styled.input = (css) => 'input';
-          styled.keyframes = (css) => 'keyframes';
-          styled.label = (css) => 'label';
-          styled.li = (css) => 'li';
-          styled.span = (css) => 'span';
-          styled.svg = (css) => 'svg';
-          styled.ul = (css) => 'ul';
+          const styled = new Proxy({}, {
+            get(target, property, receiver) {
+              return (css) => {
+                return property;
+              };
+            }
+          });
 
           function WidgetWrapper() {
             try {

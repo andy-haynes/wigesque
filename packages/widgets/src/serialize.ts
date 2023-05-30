@@ -66,38 +66,6 @@ interface SerializeNodeOptions {
 export type DeserializePropsCallback = (props: DeserializePropsOptions) => any;
 export type SerializeArgsCallback = (args: SerializeArgsOptions) => SerializedArgs;
 
-// TODO implement these for real
-const BUILTIN_COMPONENTS = {
-  Checkbox: {
-    type: 'div',
-    children: 'Checkbox',
-  },
-  CommitButton: {
-    type: 'button',
-    children: 'CommitButton',
-  },
-  Dialog: {
-    type: 'div',
-    children: 'Dialog',
-  },
-  DropdownMenu: {
-    type: 'div',
-    children: 'DropdownMenu',
-  },
-  InfiniteScroll: {
-    type: 'div',
-    children: 'InfiniteScroll',
-  },
-  IpfsImageUpload: {
-    type: 'button',
-    children: 'IpfsImageUpload',
-  },
-  Markdown: {
-    type: 'div',
-    children: 'Markdown',
-  },
-};
-
 export function serializeProps({ callbacks, index, parentId, props, widgetId }: SerializePropsOptions): Props {
   return Object.entries(props)
     .reduce((newProps, [key, value]) => {
@@ -173,6 +141,38 @@ export function deserializeProps({ props, callbacks, widgetId }: DeserializeProp
 }
 
 export function serializeNode({ node, index, childWidgets, callbacks, parentId }: SerializeNodeOptions): SerializedNode {
+// TODO implement these for real
+  const BUILTIN_COMPONENTS = {
+    Checkbox: {
+      type: 'div',
+      children: 'Checkbox',
+    },
+    CommitButton: {
+      type: 'button',
+      children: 'CommitButton',
+    },
+    Dialog: {
+      type: 'div',
+      children: 'Dialog',
+    },
+    DropdownMenu: {
+      type: 'div',
+      children: 'DropdownMenu',
+    },
+    InfiniteScroll: {
+      type: 'div',
+      children: 'InfiniteScroll',
+    },
+    IpfsImageUpload: {
+      type: 'button',
+      children: 'IpfsImageUpload',
+    },
+    Markdown: {
+      type: 'div',
+      children: 'Markdown',
+    },
+  };
+
   let { type } = node;
   const { children } = node.props;
   const props = { ...node.props };

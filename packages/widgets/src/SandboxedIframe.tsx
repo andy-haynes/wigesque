@@ -14,38 +14,6 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
         <div id="${id}"></div>
         <script type="module">
           /* generated code for ${widgetPath} */
-          // TODO implement these for real
-          const BUILTIN_COMPONENTS = {
-            Checkbox: {
-              type: 'div',
-              children: 'Checkbox',
-            },
-            CommitButton: {
-              type: 'button',
-              children: 'CommitButton',
-            },
-            Dialog: {
-              type: 'div',
-              children: 'Dialog',
-            },
-            DropdownMenu: {
-              type: 'div',
-              children: 'DropdownMenu',
-            },
-            InfiniteScroll: {
-              type: 'div',
-              children: 'InfiniteScroll',
-            },
-            IpfsImageUpload: {
-              type: 'button',
-              children: 'IpfsImageUpload',
-            },
-            Markdown: {
-              type: 'div',
-              children: 'Markdown',
-            },
-          };
-
           const callbacks = {};
 
           ${deserializeProps.toString()}

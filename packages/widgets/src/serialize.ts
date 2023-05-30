@@ -18,6 +18,54 @@ interface SerializedProps extends KeyValuePair {
   };
 }
 
+type SerializedArgs = Array<string | number | object | any[] | { __widgetMethod: string }>;
+
+interface WidgetProps {
+  className: string;
+  id: string;
+}
+
+interface NodeProps extends Props {
+  children: any[];
+}
+
+interface SerializedNode {
+  childWidgets?: SerializedNode[];
+  type: string;
+  props: NodeProps | WidgetProps;
+}
+
+interface SerializePropsOptions {
+  callbacks: KeyValuePair;
+  index: number;
+  parentId: string;
+  props: any;
+  widgetId?: string;
+}
+
+interface DeserializePropsOptions {
+  props: SerializedProps;
+  callbacks: KeyValuePair;
+  widgetId: string;
+}
+
+interface SerializeArgsOptions {
+  args: any[];
+  callbacks: KeyValuePair;
+  widgetId: string;
+}
+
+interface SerializeNodeOptions {
+  node: any;
+  index: number;
+  childWidgets: any[];
+  callbacks: KeyValuePair;
+  parentId: string;
+}
+
+export type DeserializePropsCallback = (props: DeserializePropsOptions) => any;
+export type SerializeArgsCallback = (args: SerializeArgsOptions) => SerializedArgs;
+
 // TODO implement these for real
 const BUILTIN_COMPONENTS = {
   Checkbox: {
@@ -50,7 +98,7 @@ const BUILTIN_COMPONENTS = {
   },
 };
 
-export function serializeProps({ callbacks, index, parentId, props, widgetId }: { callbacks: KeyValuePair, parentId: string, props: any, index: number, widgetId?: string }) {
+export function serializeProps({ callbacks, index, parentId, props, widgetId }: SerializePropsOptions): Props {
   return Object.entries(props)
     .reduce((newProps, [key, value]) => {
       if (typeof value !== 'function') {
@@ -81,7 +129,7 @@ export function serializeProps({ callbacks, index, parentId, props, widgetId }: 
     } as Props);
 }
 
-export function serializeArgs({ args, callbacks, widgetId }: { args: any[], callbacks: KeyValuePair, widgetId: string }) {
+export function serializeArgs({ args, callbacks, widgetId }: SerializeArgsOptions): SerializedArgs {
   return (args || []).map((arg) => {
     if (typeof arg !== 'function') {
       return arg;
@@ -96,7 +144,7 @@ export function serializeArgs({ args, callbacks, widgetId }: { args: any[], call
   });
 }
 
-export function deserializeProps({ props, callbacks, widgetId }: { props: SerializedProps, callbacks: KeyValuePair, widgetId: string }) {
+export function deserializeProps({ props, callbacks, widgetId }: DeserializePropsOptions): object {
   const { __widgetcallbacks } = props;
   const widgetProps = { ...props };
   delete widgetProps.__widgetcallbacks;
@@ -124,7 +172,7 @@ export function deserializeProps({ props, callbacks, widgetId }: { props: Serial
   };
 }
 
-export function serializeNode({ node, index, childWidgets, callbacks, parentId }: { node: any, index: number, childWidgets: any[], callbacks: KeyValuePair, parentId: string }): any {
+export function serializeNode({ node, index, childWidgets, callbacks, parentId }: SerializeNodeOptions): SerializedNode {
   let { type } = node;
   const { children } = node.props;
   const props = { ...node.props };

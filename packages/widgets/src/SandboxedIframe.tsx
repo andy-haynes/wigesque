@@ -1,3 +1,5 @@
+import { deserializeProps, serializeArgs, serializeNode, serializeProps } from './serialize';
+
 function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scriptSrc: string, widgetProps: any }) {
   const widgetPath = id.split('::')[0];
   const jsonWidgetProps = widgetProps ? JSON.stringify(widgetProps) : '{}';
@@ -45,132 +47,20 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
 
           const callbacks = {};
 
-          function serializeProps({ props, index, widgetId }) {
-            return Object.entries(props)
-              .reduce((newProps, [key, value]) => {
-                if (typeof value !== 'function') {
-                  newProps[key] = value;
-                  return newProps;
-                }
-
-                // [widgetId] only applies to props on widgets, use method
-                // body to distinguish between non-widget callbacks
-                const fnKey = key + '::' + (widgetId || value.toString().replace(/\\n/g, ''));
-                callbacks[fnKey] = value;
-
-                if (widgetId) {
-                  newProps.__widgetcallbacks[key] = {
-                    __widgetMethod: fnKey,
-                    parentId: '${id}',
-                  };
-                } else {
-                  newProps.__domcallbacks[key] = {
-                    __widgetMethod: fnKey,
-                  };                  
-                }
-
-                return newProps;
-              }, {
-                __domcallbacks: {},
-                __widgetcallbacks: {},
-              });
-          }
-
-          function serializeArgs({ args, widgetId }) {
-            return (args || []).map((arg) => {
-              if (typeof arg !== 'function') {
-                return arg;
-              }
-  
-              const callbackBody = arg.toString().replace(/\\n/g, '');
-              const fnKey = callbackBody + '::' + widgetId;
-              callbacks[fnKey] = arg;
-              return {
-                __widgetMethod: fnKey,
-              };
-            });
-          }
-
-          function deserializeProps(props) {
-            const { __widgetcallbacks, ...widgetProps } = props;
-            return {
-              ...widgetProps,
-              ...Object.entries(__widgetcallbacks || {}).reduce((widgetCallbacks, [methodName, { __widgetMethod, parentId }]) => {
-                if (props[methodName]) {
-                  throw new Error('duplicate props key "' + methodName + '" on ${id}');
-                }
-  
-                widgetCallbacks[methodName] = (...args) => { 
-                  // any function arguments are closures in this child widget scope
-                  // and must be cached in the widget iframe
-                  window.parent.postMessage({
-                    args: serializeArgs({ args, widgetId: '${id}' }),
-                    method: __widgetMethod, // the key on the props object passed to this Widget
-                    targetId: parentId,
-                    type: 'widget.callback',
-                  }, '*');
-                }
-
-                return widgetCallbacks;
-              }, {}),
-            };
-          }
-
-          function serializeNode(node, index, childWidgets) {
-            let { type } = node;
-            const { children, ...props } = node.props;
-            const unifiedChildren = Array.isArray(children)
-              ? children
-              : [children];
-
-            if (!type) {
-              type = 'div';
-            } else if (typeof type === 'function') {
-              const { name: component } = type;
-              if (component === '_') {
-                type = 'div';
-              } else if (BUILTIN_COMPONENTS[component]) {
-                type = BUILTIN_COMPONENTS[component].type;
-              } else if (component === 'Widget') {
-                const { src, props: widgetProps } = props;
-                // FIXME this breaks when the order of children changes
-                //  needs a deterministic key (hash the internal widget state?)
-                //  to distinguish between sibling widgets with the same source
-                const widgetId = src + '::' + index + '::${id}';
-                try {
-                  childWidgets.push({
-                    props: widgetProps ? serializeProps({ props: widgetProps, index, widgetId }) : {},
-                    source: src,
-                    widgetId,
-                  });
-                } catch (error) {
-                  console.warn('failed to dispatch widget load for ${id}', { error, widgetProps });
-                }
-
-                return {
-                  type: 'div',
-                  props: {
-                    id: 'dom-' + widgetId,
-                    className: 'iframe',
-                  },
-                }
-              }
-            }
-
-            return {
-              type,
-              props: {
-                ...serializeProps({ props, index }),
-                children: unifiedChildren
-                  .flat()
-                  .map((c, i) => c && c.props ? serializeNode(c, i, childWidgets) : c),
-              },
-              childWidgets,
-            }
-          }
+          ${deserializeProps.toString()}
+          ${serializeArgs.toString()}
+          ${serializeNode.toString()}
+          ${serializeProps.toString()}
 
           const dispatchRenderEvent = (node) => {
-            const { childWidgets, ...serialized } = serializeNode(node, -1, []);
+            const { childWidgets, ...serialized } = serializeNode({
+              node,
+              index: -1,
+              childWidgets: [],
+              callbacks,
+              parentId: '${id}',
+            });
+
             try {
               window.parent.postMessage({
                 id: '${id}',
@@ -225,7 +115,11 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           let state = {};
 
           /* NS shims */
-          let props = deserializeProps(JSON.parse("${jsonWidgetProps.replace(/"/g, '\\"')}"));
+          let props = deserializeProps({
+            callbacks,
+            parentId: '${id}',
+            props: JSON.parse("${jsonWidgetProps.replace(/"/g, "\\\"")}"),
+          });
 
           function asyncFetch(url, options) {
             return fetch(url, options)
@@ -384,7 +278,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
 
                     return (...childArgs) => {
                       window.parent.postMessage({
-                        args: serializeArgs({ args: childArgs, widgetId: '${id}' }),
+                        args: serializeArgs({ args: childArgs, callbacks, widgetId: '${id}' }),
                         method: widgetMethod,
                         targetId: widgetMethod.split('::').slice(1).join('::'),
                         type: 'widget.callback',
@@ -415,7 +309,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                 break;
               }
               case 'widget.update': {
-                props = deserializeProps(event.data.props);
+                props = deserializeProps({ callbacks, parentId: '${id}', props: event.data.props });
                 shouldRender = true;
                 break;
               }

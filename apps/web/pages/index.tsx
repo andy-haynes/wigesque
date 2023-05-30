@@ -1,110 +1,32 @@
-import { getAppDomId, getIframeId, Widget } from "widgets";
+import { getAppDomId, Widget } from "widgets";
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
+
+import { createChildElements, createElement, postMessageToChildIframe, WidgetDOMElement } from './widget-utils';
 
 const LOCAL_PROXY_WIDGET_URL_PREFIX = 'http://localhost:3001/widget';
 const rootWidgetPath = 'andyh.near/widget/RenderTestRoot'
 
-const roots = {} as { [key: string]: any };
+const roots = {} as { [key: string]: ReactDOM.Root };
 const widgets = {} as { [key: string]: any };
 
-function postMessageToChildIframe({ id, message, targetOrigin }: { id: string, message: object, targetOrigin: string }) {
-  (document.getElementById(getIframeId(id)) as HTMLIFrameElement)
-    ?.contentWindow?.postMessage(message, targetOrigin);
-}
+function mountElement({ id, element }: { id: string, element: WidgetDOMElement }) {
+  if (!roots[id]) {
+    const domElement = document.getElementById(getAppDomId(id));
+    if (!domElement) {
+      console.error(`Node not found: #${id}`);
+      return;
+    }
 
-function deserializeProps({ id, props }: { id: string, props: any }): any {
-  if (!props || !props.__domcallbacks) {
-    return props;
+    roots[id] = ReactDOM.createRoot(domElement);
   }
 
-  Object.entries(props.__domcallbacks)
-    .forEach(([propKey, callback]: [string, any]) => {
-      props[propKey.split('::')[0]] = (...args: any[]) => {
-        let serializedArgs: any = args;
-        // is this a DOM event?
-        if (args[0]?.target) {
-          serializedArgs = {
-            event: {
-              target: {
-                value: args[0].target?.value,
-              },
-            },
-          }
-        }
-
-        postMessageToChildIframe({
-          id,
-          message: {
-            args: serializedArgs,
-            method: callback.__widgetMethod,
-            type: 'widget.callback',
-          },
-          targetOrigin: '*',
-        });
-      }
-    });
-
-  return props;
+  roots[id].render(element);
 }
 
 export default function Web() {
   const [updates, setUpdates] = useState('');
   const [widgetCount, setWidgetCount] = useState(1);
-
-  const createAndMountElement = ({ children, id, props, type }: { children?: any, id: string, props: object, type: string }) => {
-    const element = React.createElement(type, deserializeProps({ id, props }), children);
-    if (roots[id]) {
-      roots[id].render(element);
-    } else {
-      const domElement = document.getElementById(getAppDomId(id));
-      if (domElement) {
-        const root = ReactDOM.createRoot(domElement);
-        roots[id] = root;
-        root.render(element);
-      }
-    }
-  };
-
-  const createChildElements = ({ children, depth, index, parentId }: { children?: any, depth: number, index?: number, parentId: string }): any => {
-    // `children` is a literal
-    if (typeof children === 'string' || typeof children === 'number') {
-      return children;
-    }
-
-    // `children` is (non-zero) falsy
-    if (!children) {
-      return '';
-    }
-
-    // `children` is a single component
-    if (children.type) {
-      const { type, props: { children: subChildren, ...props } } = children;
-      const childProps = {
-        ...deserializeProps({ id: parentId, props }),
-        key: `${parentId}-${depth}-${index}`
-      };
-
-      if (!subChildren || !subChildren.filter((c: any) => c !== undefined).length) {
-        return React.createElement(type, childProps);
-      }
-
-      return React.createElement(type, childProps, createChildElements({
-        children: subChildren,
-        depth: depth + 1,
-        index,
-        parentId,
-      }));
-    }
-
-    // `children` is an array of components and/or primitives
-    return children.map((child: any, i: number) => createChildElements({
-      children: child,
-      depth: depth + 1,
-      index: i,
-      parentId,
-    }));
-  };
 
   useEffect(() => {
     async function processEvent(event: any) {
@@ -120,7 +42,7 @@ export default function Web() {
           const { children, ...props } = node?.props || { children: [] };
 
           const componentChildren = createChildElements({ children, depth: 0, parentId: id });
-          createAndMountElement({
+          const element = createElement({
             children: [
               React.createElement('span', { className: 'dom-label' }, `[${id.split('::')[0]}]`),
               React.createElement('br'),
@@ -130,6 +52,7 @@ export default function Web() {
             props,
             type: node.type,
           });
+          mountElement({ id, element });
 
           childWidgets.forEach(({ widgetId, props: widgetProps, source }: { widgetId: string, props: any, source: string }) => {
             /*

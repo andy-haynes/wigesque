@@ -1,3 +1,4 @@
+import { buildEventHandler, invokeWidgetCallback } from './events';
 import { deserializeProps, serializeArgs, serializeNode, serializeProps } from './serialize';
 
 function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scriptSrc: string, widgetProps: any }) {
@@ -259,69 +260,15 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           }
           renderWidget();
 
-          function processEvent(event) {
-            let shouldRender = false;
-            switch (event.data.type) {
-              case 'widget.callback': {
-                let { args, method } = event.data;
-                if (!callbacks[method]) {
-                  console.error('No method "' + method + '" on widget ${id}');
-                  return;
-                }
-
-                if (typeof args?.some === 'function' && args.some((arg) => arg.__widgetMethod)) {
-                  args = args.map((arg) => {
-                    const { __widgetMethod: widgetMethod } = arg;
-                    if (!widgetMethod) {
-                      return arg;
-                    }
-
-                    return (...childArgs) => {
-                      window.parent.postMessage({
-                        args: serializeArgs({ args: childArgs, callbacks, widgetId: '${id}' }),
-                        method: widgetMethod,
-                        targetId: widgetMethod.split('::').slice(1).join('::'),
-                        type: 'widget.callback',
-                      }, '*');
-                    };
-                  });
-                }
-
-                const callback = callbacks[method];
-                if (args === undefined) {
-                  callback();
-                } else if (Array.isArray(args)) {
-                  callback(...args);
-                } else if (args.event) {
-                  callback(args.event);
-                } else if (args) {
-                  // FIXME
-                  if (args.event) {
-                    // unwrap event
-                    callback(args.event);
-                  } else {
-                    callback(args);                    
-                  }
-                } else {
-                  console.error('Unknown args pattern', { args });
-                }
-                shouldRender = true;
-                break;
-              }
-              case 'widget.update': {
-                props = deserializeProps({ callbacks, widgetId: '${id}', props: event.data.props });
-                shouldRender = true;
-                break;
-              }
-              default: {
-                return;
-              }
-            }
-
-            if (shouldRender) {
-              renderWidget();
-            }
-          }
+          ${invokeWidgetCallback.toString()}
+          const processEvent = (${buildEventHandler.toString()})({
+            callbacks,
+            deserializeProps,
+            renderWidget,
+            serializeArgs,
+            setProps: (newProps) => { props = newProps; },
+            widgetId: '${id}'
+          });
 
           window.addEventListener('message', processEvent);
         </script>

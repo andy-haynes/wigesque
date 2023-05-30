@@ -140,9 +140,9 @@ export function serializeNode({ node, index, childWidgets, callbacks, parentId }
     const { name: component } = type;
     if (component === '_') {
       type = 'div';
-      // @ts-expect-error blah
+      // @ts-expect-error
     } else if (BUILTIN_COMPONENTS[component]) {
-      // @ts-expect-error blah
+      // @ts-expect-error
       type = BUILTIN_COMPONENTS[component].type;
     } else if (component === 'Widget') {
       const { src, props: widgetProps } = props;

@@ -117,8 +117,8 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           /* NS shims */
           let props = deserializeProps({
             callbacks,
-            parentId: '${id}',
             props: JSON.parse("${jsonWidgetProps.replace(/"/g, "\\\"")}"),
+            widgetId: '${id}',
           });
 
           function asyncFetch(url, options) {
@@ -309,7 +309,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                 break;
               }
               case 'widget.update': {
-                props = deserializeProps({ callbacks, parentId: '${id}', props: event.data.props });
+                props = deserializeProps({ callbacks, widgetId: '${id}', props: event.data.props });
                 shouldRender = true;
                 break;
               }

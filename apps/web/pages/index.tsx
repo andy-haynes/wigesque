@@ -5,7 +5,7 @@ import ReactDOM from "react-dom/client";
 import { createChildElements, createElement, postMessageToChildIframe, WidgetDOMElement } from './widget-utils';
 
 const LOCAL_PROXY_WIDGET_URL_PREFIX = 'http://localhost:3001/widget';
-const rootWidgetPath = 'andyh.near/widget/RenderTestRoot'
+const DEFAULT_ROOT_WIDGET = 'mob.near/widget/Welcome'
 
 const roots = {} as { [key: string]: ReactDOM.Root };
 const widgets = {} as { [key: string]: any };
@@ -25,6 +25,8 @@ function mountElement({ id, element }: { id: string, element: WidgetDOMElement }
 }
 
 export default function Web() {
+  const [rootWidget, setRootWidget] = useState('');
+  const [rootWidgetInput, setRootWidgetInput] = useState(DEFAULT_ROOT_WIDGET);
   const [updates, setUpdates] = useState('');
   const [widgetCount, setWidgetCount] = useState(1);
 
@@ -109,18 +111,36 @@ export default function Web() {
     return () => window.removeEventListener('message', processEvent);
   }, []);
 
+  if (!rootWidget) {
+    return (
+      <div className='App'>
+        <div>
+          <input
+            type='text'
+            value={rootWidgetInput}
+            style={{ width: '400px' }}
+            onChange={(e) => setRootWidgetInput(e.target.value)}
+          />
+          <button onClick={() => setRootWidget(rootWidgetInput)}>
+            Update Root Widget
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className='App'>
       <h6>{widgetCount} widgets rendered</h6>
-      <div id={getAppDomId(rootWidgetPath)} className='iframe'>
+      <div id={getAppDomId(rootWidget)} className='iframe'>
         root widget goes here
       </div>
       <div className="iframes">
         <h5>here be hidden iframes</h5>
         <Widget
           key={0}
-          id={rootWidgetPath}
-          sourceUrl={`${LOCAL_PROXY_WIDGET_URL_PREFIX}/${rootWidgetPath}`}
+          id={rootWidget}
+          sourceUrl={`${LOCAL_PROXY_WIDGET_URL_PREFIX}/${rootWidget}`}
         />
         {
           Object.entries(widgets)

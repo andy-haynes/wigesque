@@ -26,7 +26,7 @@ export async function fetchWidgetSource(widgetPath) {
 export async function transpileWidget(widgetPath) {
   const source = await fetchWidgetSource(widgetPath);
   const componentSource = `
-  function WidgetComponent () {
+  async function WidgetComponent () {
     /* ${widgetPath} */
     ${source}
   }

@@ -216,9 +216,9 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             }
           });
 
-          function WidgetWrapper() {
+          async function WidgetWrapper() {
             try {
-              return (
+              return await (
                 /* BEGIN EXTERNAL SOURCE */
                 ${scriptSrc}
                 /* END EXTERNAL SOURCE */
@@ -228,8 +228,8 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             }
           }
       
-          function renderWidget() {
-            render(WidgetWrapper(), document.getElementById('${id}'));
+          async function renderWidget() {
+            render(await WidgetWrapper(), document.getElementById('${id}'));
           }
           renderWidget();
 

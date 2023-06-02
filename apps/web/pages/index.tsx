@@ -90,14 +90,31 @@ export default function Web() {
             a widget has invoked a callback passed to it as props by its parent widget
             post a widget callback message to the parent iframe
           */
-          const { args, method, targetId } = data;
+          const { args, method, originator, requestId, targetId } = data;
           postMessageToChildIframe({
             id: targetId,
             message: {
               args,
               method,
+              originator,
+              requestId,
               targetId,
               type: 'widget.callback',
+            },
+            targetOrigin: '*',
+          });
+        } else if (data.type === 'widget.callbackResponse') {
+          /*
+            a widget has invoked a callback passed to it as props by its parent widget
+            post a widget callback message to the parent iframe
+          */
+          const { requestId, result, targetId } = data;
+          postMessageToChildIframe({
+            id: targetId,
+            message: {
+              result,
+              requestId,
+              type: 'widget.callbackResponse',
             },
             targetOrigin: '*',
           });

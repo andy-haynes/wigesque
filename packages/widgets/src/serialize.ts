@@ -1,3 +1,5 @@
+import type { BuildRequestCallback, CallbackRequest } from './utils';
+
 interface KeyValuePair {
   [key: string]: any;
 }
@@ -44,8 +46,10 @@ interface SerializePropsOptions {
 }
 
 interface DeserializePropsOptions {
+  buildRequest: BuildRequestCallback;
   props: SerializedProps;
   callbacks: KeyValuePair;
+  requests: { [key: string]: CallbackRequest }
   widgetId: string;
 }
 
@@ -112,7 +116,7 @@ export function serializeArgs({ args, callbacks, widgetId }: SerializeArgsOption
   });
 }
 
-export function deserializeProps({ props, callbacks, widgetId }: DeserializePropsOptions): object {
+export function deserializeProps({ buildRequest, props, callbacks, requests, widgetId }: DeserializePropsOptions): object {
   const { __widgetcallbacks } = props;
   const widgetProps = { ...props };
   delete widgetProps.__widgetcallbacks;
@@ -125,14 +129,21 @@ export function deserializeProps({ props, callbacks, widgetId }: DeserializeProp
       }
 
       widgetCallbacks[methodName] = (...args: any) => {
+        const requestId = window.crypto.randomUUID();
+        requests[requestId] = buildRequest();
+
         // any function arguments are closures in this child widget scope
         // and must be cached in the widget iframe
         window.parent.postMessage({
           args: serializeArgs({ args, callbacks, widgetId }),
           method: __widgetMethod, // the key on the props object passed to this Widget
+          originator: widgetId,
+          requestId,
           targetId: parentId,
           type: 'widget.callback',
         }, '*');
+
+        return requests[requestId].promise;
       }
 
       return widgetCallbacks;

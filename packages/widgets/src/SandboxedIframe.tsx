@@ -1,5 +1,6 @@
-import { buildEventHandler, invokeWidgetCallback } from './events';
+import { buildEventHandler, invokeCallback, invokeWidgetCallback } from './events';
 import { deserializeProps, serializeArgs, serializeNode, serializeProps } from './serialize';
+import { buildRequest } from './utils';
 
 function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scriptSrc: string, widgetProps: any }) {
   const widgetPath = id.split('::')[0];
@@ -15,7 +16,9 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
         <script type="module">
           /* generated code for ${widgetPath} */
           const callbacks = {};
+          const requests = {};
 
+          ${buildRequest.toString()}
           ${deserializeProps.toString()}
           ${serializeArgs.toString()}
           ${serializeNode.toString()}
@@ -85,8 +88,10 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
 
           /* NS shims */
           let props = deserializeProps({
+            buildRequest,
             callbacks,
             props: JSON.parse("${jsonWidgetProps.replace(/"/g, "\\\"")}"),
+            requests,
             widgetId: '${id}',
           });
 
@@ -228,11 +233,14 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           }
           renderWidget();
 
+          ${invokeCallback.toString()}
           ${invokeWidgetCallback.toString()}
           const processEvent = (${buildEventHandler.toString()})({
+            buildRequest,
             callbacks,
             deserializeProps,
             renderWidget,
+            requests,
             serializeArgs,
             setProps: (newProps) => { props = newProps; },
             widgetId: '${id}'

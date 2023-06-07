@@ -41,6 +41,26 @@ export function serializeProps({ callbacks, index, parentId, props, widgetId }: 
 
 export function serializeArgs({ args, callbacks, widgetId }: SerializeArgsOptions): SerializedArgs {
   return (args || []).map((arg) => {
+    if (!arg) {
+      return arg;
+    }
+
+    if (Array.isArray(arg)) {
+      return serializeArgs({ args: arg, callbacks, widgetId });
+    }
+
+    if (typeof arg === 'object') {
+      const argKeys = Object.keys(arg);
+      return Object.fromEntries(
+        serializeArgs({
+          args: Object.values(arg),
+          callbacks,
+          widgetId,
+        })
+          .map((value, i) => [argKeys[i], value])
+      );
+    }
+
     if (typeof arg !== 'function') {
       return arg;
     }

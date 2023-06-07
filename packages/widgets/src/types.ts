@@ -1,4 +1,4 @@
-export type Args = Array<object | string | number | null | undefined | RegExp>;
+export type Args = Array<Cloneable>;
 
 export type BuildRequestCallback = () => CallbackRequest;
 
@@ -8,11 +8,16 @@ export interface CallbackRequest {
   resolver?: (value: any) => void;
 }
 
+export type CallbackMap = { [key: string]: Function };
+
+export type Cloneable = object | string | number | null | undefined | RegExp;
+
 export type DeserializePropsCallback = (props: DeserializePropsOptions) => any;
 export interface DeserializePropsOptions {
   buildRequest: BuildRequestCallback;
   props: SerializedProps;
-  callbacks: KeyValuePair;
+  callbacks: CallbackMap;
+  postCallbackInvocationMessage: PostMessageWidgetInvocationCallback;
   requests: { [key: string]: CallbackRequest }
   widgetId: string;
 }
@@ -26,8 +31,14 @@ export interface EventData {
   props: object;
   requestId: string;
   result: string;
-  type: string;
+  type: EventType;
 }
+
+type WidgetCallbackInvocation = 'widget.callback';
+type WidgetCallbackResponse = 'widget.callbackResponse';
+type WidgetRender = 'widget.render';
+type WidgetUpdate = 'widget.update';
+export type EventType = WidgetCallbackInvocation | WidgetCallbackResponse | WidgetRender | WidgetUpdate;
 
 export interface InvokeCallbackOptions {
   args: Args | EventArgs;
@@ -37,8 +48,9 @@ export interface InvokeCallbackOptions {
 export interface InvokeWidgetCallbackOptions {
   args: Args;
   buildRequest: BuildRequestCallback;
-  callbacks: { [key: string]: Function };
+  callbacks: CallbackMap;
   method: string;
+  postCallbackInvocationMessage: PostMessageWidgetInvocationCallback;
   requests: { [key: string]: CallbackRequest };
   serializeArgs: SerializeArgsCallback;
   widgetId: string;
@@ -52,14 +64,74 @@ export interface NodeProps extends Props {
   children: any[];
 }
 
+
 export interface PostMessageEvent {
   data: EventData;
 }
 
+export interface PostMessageOptions {
+  type: EventType;
+}
+
+export type PostMessageWidgetInvocationCallback = (message: PostMessageWidgetCallbackInvocationOptions) => void;
+export interface PostMessageWidgetCallbackInvocation extends PostMessageOptions {
+  args: SerializedArgs;
+  method: string;
+  originator: string;
+  requestId: string;
+  targetId: string;
+  type: WidgetCallbackInvocation;
+}
+export interface PostMessageWidgetCallbackInvocationOptions {
+  args: any[];
+  callbacks: CallbackMap;
+  method: string;
+  requestId: string;
+  serializeArgs: SerializeArgsCallback;
+  targetId: string;
+  widgetId: string;
+}
+
+export type PostMessageWidgetResponseCallback = (message: PostMessageWidgetCallbackResponseOptions) => void;
+export interface PostMessageWidgetCallbackResponse extends PostMessageOptions {
+  requestId: string;
+  result: string; // stringified JSON in the form of { result: any, error: string }
+  targetId: string;
+  type: WidgetCallbackResponse;
+}
+export interface PostMessageWidgetCallbackResponseOptions {
+  error: Error | null;
+  requestId: string;
+  result: any;
+  targetId: string;
+}
+
+export interface PostMessageWidgetRender extends PostMessageOptions {
+  childWidgets: string[];
+  node: SerializedNode;
+  type: WidgetRender;
+  widgetId: string;
+}
+export interface PostMessageWidgetRenderOptions {
+  childWidgets: string[];
+  node: SerializedNode;
+  widgetId: string;
+}
+
+export interface PostMessageWidgetUpdate extends PostMessageOptions {
+  props: any;
+  type: WidgetUpdate;
+}
+export interface PostMessageWidgetUpdateOptions {
+  props: any;
+}
+
 export interface ProcessEventOptions {
   buildRequest: BuildRequestCallback;
-  callbacks: { [key: string]: Function };
+  callbacks: CallbackMap;
   deserializeProps: DeserializePropsCallback;
+  postCallbackInvocationMessage: PostMessageWidgetInvocationCallback;
+  postCallbackResponseMessage: PostMessageWidgetResponseCallback;
   renderWidget: () => void;
   requests: { [key: string]: CallbackRequest };
   serializeArgs: SerializeArgsCallback;
@@ -76,7 +148,7 @@ export type SerializedArgs = Array<string | number | object | any[] | { __widget
 export type SerializeArgsCallback = (args: SerializeArgsOptions) => SerializedArgs;
 export interface SerializeArgsOptions {
   args: any[];
-  callbacks: KeyValuePair;
+  callbacks: CallbackMap;
   widgetId: string;
 }
 
@@ -84,7 +156,7 @@ export interface SerializeNodeOptions {
   node: any;
   index: number;
   childWidgets: any[];
-  callbacks: KeyValuePair;
+  callbacks: CallbackMap;
   parentId: string;
 }
 
@@ -101,7 +173,7 @@ export interface SerializedProps extends KeyValuePair {
 }
 
 export interface SerializePropsOptions {
-  callbacks: KeyValuePair;
+  callbacks: CallbackMap;
   index: number;
   parentId: string;
   props: any;

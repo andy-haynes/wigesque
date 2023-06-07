@@ -10,18 +10,18 @@ const DEFAULT_ROOT_WIDGET = 'mob.near/widget/Welcome'
 const roots = {} as { [key: string]: ReactDOM.Root };
 const widgets = {} as { [key: string]: any };
 
-function mountElement({ id, element }: { id: string, element: WidgetDOMElement }) {
-  if (!roots[id]) {
-    const domElement = document.getElementById(getAppDomId(id));
+function mountElement({ widgetId, element }: { widgetId: string, element: WidgetDOMElement }) {
+  if (!roots[widgetId]) {
+    const domElement = document.getElementById(getAppDomId(widgetId));
     if (!domElement) {
-      console.error(`Node not found: #${id}`);
+      console.error(`Node not found: #${getAppDomId(widgetId)}`);
       return;
     }
 
-    roots[id] = ReactDOM.createRoot(domElement);
+    roots[widgetId] = ReactDOM.createRoot(domElement);
   }
 
-  roots[id].render(element);
+  roots[widgetId].render(element);
 }
 
 export default function Web() {
@@ -40,32 +40,32 @@ export default function Web() {
         const { data } = event;
         if (data.type === 'widget.render') {
           /* a widget has been rendered and is ready to be updated in the outer window */
-          const { id, childWidgets, node } = data;
+          const { widgetId, childWidgets, node } = data;
           const { children, ...props } = node?.props || { children: [] };
 
-          const componentChildren = createChildElements({ children, depth: 0, parentId: id });
+          const componentChildren = createChildElements({ children, depth: 0, parentId: widgetId });
           const element = createElement({
             children: [
-              React.createElement('span', { className: 'dom-label' }, `[${id.split('::')[0]}]`),
+              React.createElement('span', { className: 'dom-label' }, `[${widgetId.split('::')[0]}]`),
               React.createElement('br'),
               ...(Array.isArray(componentChildren) ? componentChildren : [componentChildren]),
             ],
-            id,
+            id: widgetId,
             props,
             type: node.type,
           });
-          mountElement({ id, element });
+          mountElement({ widgetId, element });
 
-          childWidgets.forEach(({ widgetId, props: widgetProps, source }: { widgetId: string, props: any, source: string }) => {
+          childWidgets.forEach(({ widgetId: childWidgetId, props: widgetProps, source }: { widgetId: string, props: any, source: string }) => {
             /*
               a widget is being rendered by a parent widget, either:
               - this widget is being loaded for the first time
               - the parent widget has updated and is re-rendering this widget
             */
-            if (!widgets[widgetId]) {
+            if (!widgets[childWidgetId]) {
               /* widget code has not yet been loaded, add to cache and load */
-              widgets[widgetId] = {
-                parentId: id,
+              widgets[childWidgetId] = {
+                parentId: widgetId,
                 props: widgetProps,
                 sourceUrl: `${LOCAL_PROXY_WIDGET_URL_PREFIX}/${source}`,
               };
@@ -84,7 +84,7 @@ export default function Web() {
             }
           });
 
-          setUpdates(updates + id);
+          setUpdates(updates + widgetId);
         } else if (data.type === 'widget.callback') {
           /*
             a widget has invoked a callback passed to it as props by its parent widget

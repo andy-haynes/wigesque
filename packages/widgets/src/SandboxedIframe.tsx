@@ -1,6 +1,21 @@
-import { buildEventHandler, invokeCallback, invokeWidgetCallback } from './events';
-import { deserializeProps, serializeArgs, serializeNode, serializeProps } from './serialize';
-import { buildRequest } from './utils';
+import {
+  buildEventHandler,
+  invokeCallback,
+  invokeWidgetCallback,
+} from './events';
+import {
+  buildRequest,
+  postMessage,
+  postCallbackInvocationMessage,
+  postCallbackResponseMessage,
+  postWidgetRenderMessage,
+} from './messaging';
+import {
+  deserializeProps,
+  serializeArgs,
+  serializeNode,
+  serializeProps,
+} from './serialize';
 
 function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scriptSrc: string, widgetProps: any }) {
   const widgetPath = id.split('::')[0];
@@ -19,6 +34,11 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           const requests = {};
 
           ${buildRequest.toString()}
+          ${postMessage.toString()}
+          ${postWidgetRenderMessage.toString()}
+          ${postCallbackInvocationMessage.toString()}
+          ${postCallbackResponseMessage.toString()}
+
           ${deserializeProps.toString()}
           ${serializeArgs.toString()}
           ${serializeNode.toString()}
@@ -34,12 +54,11 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             });
 
             try {
-              window.parent.postMessage({
-                id: '${id}',
+              postWidgetRenderMessage({
                 childWidgets,
                 node: serialized,
-                type: 'widget.render'
-              }, '*');
+                widgetId: '${id}',
+              });
             } catch (error) {
               console.warn('failed to dispatch render for ${id}', { error, serialized });
             }
@@ -90,6 +109,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           let props = deserializeProps({
             buildRequest,
             callbacks,
+            postCallbackInvocationMessage,
             props: JSON.parse("${jsonWidgetProps.replace(/"/g, "\\\"")}"),
             requests,
             widgetId: '${id}',
@@ -239,6 +259,8 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             buildRequest,
             callbacks,
             deserializeProps,
+            postCallbackInvocationMessage,
+            postCallbackResponseMessage,
             renderWidget,
             requests,
             serializeArgs,

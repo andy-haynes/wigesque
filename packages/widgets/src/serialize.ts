@@ -54,7 +54,14 @@ export function serializeArgs({ args, callbacks, widgetId }: SerializeArgsOption
   });
 }
 
-export function deserializeProps({ buildRequest, props, callbacks, requests, widgetId }: DeserializePropsOptions): object {
+export function deserializeProps({
+  buildRequest,
+  callbacks,
+  postCallbackInvocationMessage,
+  props,
+  requests,
+  widgetId,
+}: DeserializePropsOptions): object {
   const { __widgetcallbacks } = props;
   const widgetProps = { ...props };
   delete widgetProps.__widgetcallbacks;
@@ -72,14 +79,15 @@ export function deserializeProps({ buildRequest, props, callbacks, requests, wid
 
         // any function arguments are closures in this child widget scope
         // and must be cached in the widget iframe
-        window.parent.postMessage({
-          args: serializeArgs({ args, callbacks, widgetId }),
+        postCallbackInvocationMessage({
+          args,
+          callbacks,
           method: __widgetMethod, // the key on the props object passed to this Widget
-          originator: widgetId,
           requestId,
+          serializeArgs,
           targetId: parentId,
-          type: 'widget.callback',
-        }, '*');
+          widgetId,
+        });
 
         return requests[requestId].promise;
       }

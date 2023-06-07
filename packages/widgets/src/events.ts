@@ -1,66 +1,17 @@
 import type {
-  DeserializePropsCallback,
-  SerializeArgsCallback,
-} from './serialize';
-import type {
-  BuildRequestCallback,
-  CallbackRequest,
-} from './utils';
-
-type Args = Array<object | string | number | null | undefined | RegExp>;
-type EventArgs = { event: any };
-
-interface EventData {
-  args: Args;
-  method: string;
-  originator: string;
-  props: object;
-  requestId: string;
-  result: string;
-  type: string;
-}
-
-interface PostMessageEvent {
-  data: EventData;
-}
-
-interface ProcessEventOptions {
-  buildRequest: BuildRequestCallback;
-  callbacks: { [key: string]: Function };
-  deserializeProps: DeserializePropsCallback;
-  renderWidget: () => void;
-  requests: { [key: string]: CallbackRequest };
-  serializeArgs: SerializeArgsCallback;
-  setProps: (props: object) => void;
-  widgetId: string;
-}
-
-interface InvokeCallbackOptions {
-  args: Args | EventArgs;
-  callback: Function;
-}
-
-interface InvokeWidgetCallbackOptions {
-  args: Args;
-  buildRequest: BuildRequestCallback;
-  callbacks: { [key: string]: Function };
-  method: string;
-  requests: { [key: string]: CallbackRequest };
-  serializeArgs: SerializeArgsCallback;
-  widgetId: string;
-}
-
-interface WidgetCallbackInvocationResult {
-  result?: any;
-  shouldRender: boolean;
-}
+  InvokeCallbackOptions,
+  InvokeWidgetCallbackOptions,
+  PostMessageEvent,
+  ProcessEventOptions,
+  WidgetCallbackInvocationResult,
+} from './types';
 
 /**
  *
  * @param args
  * @param callback
  */
-export function invokeCallback({ args, callback }: InvokeCallbackOptions) {
+export function invokeCallback({ args, callback }: InvokeCallbackOptions): any {
   if (args === undefined) {
     return callback();
   }

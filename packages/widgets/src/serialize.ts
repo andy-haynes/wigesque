@@ -1,74 +1,12 @@
-import type { BuildRequestCallback, CallbackRequest } from './utils';
-
-interface KeyValuePair {
-  [key: string]: any;
-}
-
-interface Props extends KeyValuePair {
-  __domcallbacks: { [key: string]: any };
-  __widgetcallbacks: { [key: string]: any };
-}
-
-interface SerializedWidgetCallback {
-  __widgetMethod: string;
-  parentId: string;
-}
-
-interface SerializedProps extends KeyValuePair {
-  __widgetcallbacks?: {
-    [key: string]: SerializedWidgetCallback;
-  };
-}
-
-type SerializedArgs = Array<string | number | object | any[] | { __widgetMethod: string }>;
-
-interface WidgetProps {
-  className: string;
-  id: string;
-}
-
-interface NodeProps extends Props {
-  children: any[];
-}
-
-interface SerializedNode {
-  childWidgets?: SerializedNode[];
-  type: string;
-  props: NodeProps | WidgetProps;
-}
-
-interface SerializePropsOptions {
-  callbacks: KeyValuePair;
-  index: number;
-  parentId: string;
-  props: any;
-  widgetId?: string;
-}
-
-interface DeserializePropsOptions {
-  buildRequest: BuildRequestCallback;
-  props: SerializedProps;
-  callbacks: KeyValuePair;
-  requests: { [key: string]: CallbackRequest }
-  widgetId: string;
-}
-
-interface SerializeArgsOptions {
-  args: any[];
-  callbacks: KeyValuePair;
-  widgetId: string;
-}
-
-interface SerializeNodeOptions {
-  node: any;
-  index: number;
-  childWidgets: any[];
-  callbacks: KeyValuePair;
-  parentId: string;
-}
-
-export type DeserializePropsCallback = (props: DeserializePropsOptions) => any;
-export type SerializeArgsCallback = (args: SerializeArgsOptions) => SerializedArgs;
+import type {
+  DeserializePropsOptions,
+  Props,
+  SerializeArgsOptions,
+  SerializeNodeOptions,
+  SerializePropsOptions,
+  SerializedArgs,
+  SerializedNode,
+} from './types';
 
 export function serializeProps({ callbacks, index, parentId, props, widgetId }: SerializePropsOptions): Props {
   return Object.entries(props)

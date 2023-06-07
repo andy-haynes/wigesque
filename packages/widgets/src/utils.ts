@@ -1,10 +1,4 @@
-export interface CallbackRequest {
-  promise: Promise<any>,
-  rejecter?: (reason: any) => void;
-  resolver?: (value: any) => void;
-}
-
-export type BuildRequestCallback = () => CallbackRequest;
+import type { CallbackRequest } from './types';
 
 export function buildRequest(): CallbackRequest {
   let resolver;

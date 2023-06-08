@@ -141,7 +141,7 @@ export function buildEventHandler({
         break;
       }
       case 'widget.update': {
-        setProps(deserializeProps({
+        shouldRender = setProps(deserializeProps({
           buildRequest,
           callbacks,
           postCallbackInvocationMessage,
@@ -149,8 +149,6 @@ export function buildEventHandler({
           requests,
           widgetId,
         }));
-
-        shouldRender = true;
         break;
       }
       case 'widget.callbackResponse': {

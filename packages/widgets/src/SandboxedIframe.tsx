@@ -200,7 +200,14 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             renderWidget,
             requests,
             serializeArgs,
-            setProps: (newProps) => { props = newProps; },
+            setProps: (newProps) => {
+              if (JSON.stringify(props) === JSON.stringify(newProps)) {
+                return false;
+              }
+
+              props = newProps;
+              return true;
+            },
             widgetId: '${id}'
           });
 

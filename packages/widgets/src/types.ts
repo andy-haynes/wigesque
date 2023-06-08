@@ -148,7 +148,7 @@ export interface ProcessEventOptions {
   renderWidget: () => void;
   requests: { [key: string]: CallbackRequest };
   serializeArgs: SerializeArgsCallback;
-  setProps: (props: object) => void;
+  setProps: (props: object) => boolean;
   widgetId: string;
 }
 

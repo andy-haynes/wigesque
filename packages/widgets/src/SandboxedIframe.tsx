@@ -1,4 +1,8 @@
 import {
+  initNear,
+  initSocial,
+} from './api';
+import {
   buildEventHandler,
   invokeCallback,
   invokeWidgetCallback,
@@ -120,107 +124,21 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
               .catch(console.error);
           }
 
-          const provider = new window.nearApi.providers.JsonRpcProvider('https://rpc.near.org');
-          const __rpcRequests = {};
-          const Near = {
-            block(blockHeightOrFinality) {
-              const reqKey = JSON.stringify({ blockHeightOrFinality, type: 'block' });
-              const request = __rpcRequests[reqKey];
-              if (request || (reqKey in __rpcRequests && request === undefined)) {
-                delete __rpcRequests[reqKey];
-                return request;
-              }
-              provider.block({ finality: blockHeightOrFinality })
-                .then((block) => {
-                  __rpcRequests[reqKey] = block;
-                  renderWidget();
-                })
-                .catch(console.error);
-            },
-            call(contractName, methodName, args, gas, deposit) {},
-            view(contractName, methodName, args, blockId, subscribe) {},
-            asyncView(contractName, methodName, args, blockId, subscribe) {
-              console.log({ blockId })
-              return provider.query({
-                request_type: 'call_function',
-                finality: blockId,
-                account_id: contractName,
-                method_name: methodName,
-                args_base64: JSON.stringify(args).toString('base64')
-              });
-            },
-          };
+          const rpcCache = {};
+          const Near = (${initNear.toString()})({
+            cache: rpcCache,
+            renderWidget,
+            rpcUrl: 'https://rpc.near.org',
+          });
 
-          const context = { accountId: 'andyh.near' };
-          const State = {
-            init(obj) {
-              if (!isStateInitialized) {
-                state = obj;
-                isStateInitialized = true;
-              }
-            },
-            update(newState, initialState) {
-              // TODO real implementation
-              state = {
-                ...state,
-                ...newState,
-              };
-            },
-          };
+          const socialCache = {}; 
+          const Social = (${initSocial.toString()})({
+            cache: rpcCache,
+            endpointBaseUrl: 'https://api.near.social',
+            renderWidget,
+            widgetId: '${id}',
+          });
 
-          const __socialCache = {};
-          function cachedQuery({ apiEndpoint, body, cacheKey }) {
-              const cached = __socialCache[cacheKey];
-              if (cached || (cacheKey in __socialCache && cached === undefined)) {
-                return cached;
-              }
-
-              fetch(apiEndpoint, {
-                body: JSON.stringify(body),
-                headers: { 'Content-Type': 'application/json' },
-                method: 'POST',
-              })
-                .then((res) => res.json())
-                .then((json) => {
-                  __socialCache[cacheKey] = Object.keys(json).length ? json : undefined;
-                  renderWidget();
-                })
-                .catch((e) => console.error({ error: e, params, id: '${id}' }));
-
-              return null;
-          }
-
-          const Social = {
-            get(keys, finality, options) {
-              return cachedQuery({
-                apiEndpoint: 'https://api.near.social/get',
-                body: { keys: Array.isArray(keys) ? keys : [keys] },
-                cacheKey: JSON.stringify(keys),
-              });
-            },
-            getr(keys, finality, options) {
-              // TODO expand keys for recursive get
-              return cachedQuery({
-                apiEndpoint: 'https://api.near.social/get',
-                body: { keys: Array.isArray(keys) ? keys : [keys] },
-                cacheKey: JSON.stringify(keys),
-              });
-            },
-            index(action, key, options) {
-              return cachedQuery({
-                apiEndpoint: 'https://api.near.social/index',
-                body: { action, key, options },
-                cacheKey: JSON.stringify({ action, key, options }),
-              });
-            },
-            keys(keys, finality, options) {
-              return cachedQuery({
-                apiEndpoint: 'https://api.near.social/keys',
-                body: { keys: Array.isArray(keys) ? keys : [keys] },
-                cacheKey: JSON.stringify(keys),
-              });
-            }
-          };
           const React = {
             Fragment: 'div',
           };
@@ -251,6 +169,24 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           async function renderWidget() {
             render(await WidgetWrapper(), document.getElementById('${id}'));
           }
+
+          const context = { accountId: 'andyh.near' };
+          const State = {
+            init(obj) {
+              if (!isStateInitialized) {
+                state = obj;
+                isStateInitialized = true;
+              }
+            },
+            update(newState, initialState) {
+              // TODO real implementation
+              state = {
+                ...state,
+                ...newState,
+              };
+            },
+          };
+          
           renderWidget();
 
           ${invokeCallback.toString()}

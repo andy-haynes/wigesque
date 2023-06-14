@@ -26,6 +26,7 @@ export type EventArgs = { event: any };
 
 export interface EventData {
   args: Args;
+  isWidgetComponent: boolean;
   method: string;
   originator: string;
   props: object;
@@ -64,6 +65,7 @@ export interface InvokeWidgetCallbackOptions {
   callbacks: CallbackMap;
   method: string;
   postCallbackInvocationMessage: PostMessageWidgetInvocationCallback;
+  props: any;
   requests: { [key: string]: CallbackRequest };
   serializeArgs: SerializeArgsCallback;
   widgetId: string;
@@ -107,6 +109,7 @@ export interface PostMessageWidgetCallbackInvocationOptions {
 
 export type PostMessageWidgetResponseCallback = (message: PostMessageWidgetCallbackResponseOptions) => void;
 export interface PostMessageWidgetCallbackResponse extends PostMessageOptions {
+  isWidgetComponent: boolean;
   requestId: string;
   result: string; // stringified JSON in the form of { result: any, error: string }
   targetId: string;
@@ -114,6 +117,7 @@ export interface PostMessageWidgetCallbackResponse extends PostMessageOptions {
 }
 export interface PostMessageWidgetCallbackResponseOptions {
   error: Error | null;
+  isWidgetComponent: boolean;
   requestId: string;
   result: any;
   targetId: string;
@@ -145,11 +149,13 @@ export interface ProcessEventOptions {
   deserializeProps: DeserializePropsCallback;
   postCallbackInvocationMessage: PostMessageWidgetInvocationCallback;
   postCallbackResponseMessage: PostMessageWidgetResponseCallback;
+  props: any;
   renderWidget: () => void;
   requests: { [key: string]: CallbackRequest };
   serializeArgs: SerializeArgsCallback;
   setProps: (props: object) => boolean;
   widgetId: string;
+  Widget: Function;
 }
 
 export interface Props extends KeyValuePair {
@@ -199,6 +205,7 @@ export interface SerializedWidgetCallback {
 }
 
 export interface WidgetCallbackInvocationResult {
+  isWidgetComponent: boolean;
   result?: any;
   shouldRender: boolean;
 }

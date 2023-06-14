@@ -197,6 +197,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             deserializeProps,
             postCallbackInvocationMessage,
             postCallbackResponseMessage,
+            props,
             renderWidget,
             requests,
             serializeArgs,

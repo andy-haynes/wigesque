@@ -44,13 +44,14 @@ export function invokeWidgetCallback({
   callbacks,
   method,
   postCallbackInvocationMessage,
+  props,
   requests,
   serializeArgs,
   widgetId,
 }: InvokeWidgetCallbackOptions): WidgetCallbackInvocationResult {
   if (!callbacks[method]) {
     console.error(`No method ${method} on widget ${widgetId}`);
-    return { shouldRender: false };
+    return { isWidgetComponent: false, shouldRender: false };
   }
 
   if (typeof args?.some === 'function' && args.some((arg: any) => arg.__widgetMethod)) {
@@ -77,9 +78,17 @@ export function invokeWidgetCallback({
     });
   }
 
+  const result = invokeCallback({ args, callback: callbacks[method] });
+  const isWidgetComponent = !!(result
+    && '__k' in result
+    && '__' in result
+    && typeof result.type === 'function'
+    && result.props?.src?.match(/[0-9a-z._-]{5,}\/widget\/[0-9a-z]+/ig));
+
   return {
-    result: invokeCallback({ args, callback: callbacks[method] }),
-    shouldRender: true,
+    isWidgetComponent,
+    result,
+    shouldRender: !isWidgetComponent,
   };
 }
 
@@ -88,6 +97,7 @@ export function invokeWidgetCallback({
  * @param buildRequest Function to build an inter-Widget asynchronous callback request
  * @param callbacks The set of callbacks defined on the target Widget
  * @param deserializeProps Function to deserialize props passed on the event
+ * @param postCallbackInvocationMessage Request invocation on external Widget via window.postMessage
  * @param postCallbackResponseMessage Send callback execution result to calling Widget via window.postMessage
  * @param renderWidget Callback for rendering the Widget
  * @param requests The set of inter-Widget callback requests being tracked by the Widget
@@ -101,6 +111,7 @@ export function buildEventHandler({
   deserializeProps,
   postCallbackInvocationMessage,
   postCallbackResponseMessage,
+  props,
   renderWidget,
   requests,
   serializeArgs,
@@ -109,6 +120,7 @@ export function buildEventHandler({
 }: ProcessEventOptions): Function {
   return function processEvent(event: PostMessageEvent) {
     let error = null;
+    let isWidgetComponent = false;
     let result;
     let shouldRender = false;
 
@@ -116,12 +128,13 @@ export function buildEventHandler({
       case 'widget.callback': {
         let { args, method, originator, requestId } = event.data;
         try {
-          ({ result, shouldRender } = invokeWidgetCallback({
+          ({ isWidgetComponent, result, shouldRender } = invokeWidgetCallback({
             args,
             buildRequest,
             callbacks,
             method,
             postCallbackInvocationMessage,
+            props,
             requests,
             serializeArgs,
             widgetId,
@@ -133,6 +146,7 @@ export function buildEventHandler({
         if (requestId) {
           postCallbackResponseMessage({
             error,
+            isWidgetComponent,
             requestId,
             result,
             targetId: originator,
@@ -152,7 +166,7 @@ export function buildEventHandler({
         break;
       }
       case 'widget.callbackResponse': {
-        const { requestId, result } = event.data;
+        const { isWidgetComponent, requestId, result } = event.data;
         if (!(requestId in requests)) {
           console.error(`No request found for request ${requestId}`);
         }
@@ -175,8 +189,13 @@ export function buildEventHandler({
           return;
         }
 
+        if (isWidgetComponent) {
+          const { props, src } = value.props;
+          resolver(Widget({ props, src }));
+          break;
+        }
+
         resolver(value);
-        shouldRender = true;
         break;
       }
       default: {

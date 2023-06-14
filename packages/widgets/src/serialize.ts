@@ -174,7 +174,7 @@ export function serializeNode({ node, index, childWidgets, callbacks, parentId }
       // FIXME this breaks when the order of children changes
       //  needs a deterministic key (hash the internal widget state?)
       //  to distinguish between sibling widgets with the same source
-      const widgetId = [src, index, parentId].join('::');
+      const widgetId = [src, index, JSON.stringify(widgetProps || {}).replace(/["{} ]/g, '')].join('##');
       try {
         childWidgets.push({
           props: widgetProps ? serializeProps({ props: widgetProps, callbacks, index, parentId, widgetId }) : {},

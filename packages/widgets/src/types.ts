@@ -180,12 +180,12 @@ export interface ProcessEventOptions {
   postCallbackInvocationMessage: PostMessageWidgetInvocationCallback;
   postCallbackResponseMessage: PostMessageWidgetResponseCallback;
   props: any;
+  renderChildWidget: ({ props, src }: { props?: any, src: string }) => object;
   renderWidget: () => void;
   requests: { [key: string]: CallbackRequest };
   serializeArgs: SerializeArgsCallback;
   setProps: (props: object) => boolean;
   widgetId: string;
-  Widget: Function;
 }
 
 export interface Props extends KeyValuePair {

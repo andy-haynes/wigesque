@@ -111,6 +111,7 @@ export function buildEventHandler({
   deserializeProps,
   postCallbackInvocationMessage,
   postCallbackResponseMessage,
+  renderChildWidget,
   renderWidget,
   requests,
   serializeArgs,
@@ -192,7 +193,7 @@ export function buildEventHandler({
 
         if (isWidgetComponent) {
           const { props, src } = value.props;
-          resolver(JSON.stringify({ props, src }));
+          resolver(renderChildWidget({ props, src }));
           break;
         }
 

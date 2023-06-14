@@ -160,10 +160,12 @@ export function buildEventHandler({
         const { isWidgetComponent, requestId, result } = event.data;
         if (!(requestId in requests)) {
           console.error(`No request found for request ${requestId}`);
+          return;
         }
 
         if (!result) {
           console.error(`No response for request ${requestId}`);
+          return;
         }
 
         const { rejecter, resolver } = requests[requestId];
@@ -172,7 +174,15 @@ export function buildEventHandler({
           return;
         }
 
-        const { error, value } = JSON.parse(result);
+        let error: any;
+        let value: any;
+        try {
+          ({ error, value } = JSON.parse(result));
+        } catch (e) {
+          console.error('Could not parse returned JSON', { error: e, result });
+          return;
+        }
+
         if (error) {
           console.error('External Widget callback failed', { error });
           // TODO reject w/ Error instance

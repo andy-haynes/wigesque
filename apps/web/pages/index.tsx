@@ -2,7 +2,8 @@ import { getAppDomId, Widget } from "widgets";
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 
-import { createChildElements, createElement, postMessageToChildIframe, WidgetDOMElement } from './widget-utils';
+import { WidgetDOMElement } from './widget-utils';
+import { onCallbackInvocation, onCallbackResponse, onRender } from "./widget-handlers";
 
 const LOCAL_PROXY_WIDGET_URL_PREFIX = 'http://localhost:3001/widget';
 const DEFAULT_ROOT_WIDGET = 'mob.near/widget/Welcome'
@@ -31,102 +32,52 @@ export default function Web() {
   const [widgetCount, setWidgetCount] = useState(1);
 
   useEffect(() => {
-    async function processEvent(event: any) {
-      try {
-        if (typeof event.data !== 'object') {
-          return;
-        }
+    function buildMessageListener(eventType: string) {
+      return function (event: any) {
+        try {
+          if (typeof event.data !== 'object' || event.data.type !== eventType) {
+            return;
+          }
 
-        const { data } = event;
-        if (data.type === 'widget.render') {
-          /* a widget has been rendered and is ready to be updated in the outer window */
-          const { widgetId, childWidgets, node } = data;
-          const { children, ...props } = node?.props || { children: [] };
-
-          const componentChildren = createChildElements({ children, depth: 0, parentId: widgetId });
-          const element = createElement({
-            children: [
-              React.createElement('span', { className: 'dom-label' }, `[${widgetId.split('::')[0]}]`),
-              React.createElement('br'),
-              ...(Array.isArray(componentChildren) ? componentChildren : [componentChildren]),
-            ],
-            id: widgetId,
-            props,
-            type: node.type,
-          });
-          mountElement({ widgetId, element });
-
-          childWidgets.forEach(({ widgetId: childWidgetId, props: widgetProps, source }: { widgetId: string, props: any, source: string }) => {
-            /*
-              a widget is being rendered by a parent widget, either:
-              - this widget is being loaded for the first time
-              - the parent widget has updated and is re-rendering this widget
-            */
-            if (!widgets[childWidgetId]) {
-              /* widget code has not yet been loaded, add to cache and load */
-              widgets[childWidgetId] = {
-                parentId: widgetId,
-                props: widgetProps,
-                sourceUrl: `${LOCAL_PROXY_WIDGET_URL_PREFIX}/${source}`,
-              };
-
-              setWidgetCount(Object.keys(widgets).length);
-            } else {
-              /* widget iframe is already loaded, post update message to iframe */
-              postMessageToChildIframe({
-                id: widgetId,
-                message: {
-                  props: widgetProps,
-                  type: 'widget.update',
-                },
-                targetOrigin: '*',
-              })
+          const { data } = event;
+          switch (eventType) {
+            case 'widget.callback': {
+              onCallbackInvocation({ data });
+              break;
             }
-          });
-
-          setUpdates(updates + widgetId);
-        } else if (data.type === 'widget.callback') {
-          /*
-            a widget has invoked a callback passed to it as props by its parent widget
-            post a widget callback message to the parent iframe
-          */
-          const { args, method, originator, requestId, targetId } = data;
-          postMessageToChildIframe({
-            id: targetId,
-            message: {
-              args,
-              method,
-              originator,
-              requestId,
-              targetId,
-              type: 'widget.callback',
-            },
-            targetOrigin: '*',
-          });
-        } else if (data.type === 'widget.callbackResponse') {
-          /*
-            a widget has invoked a callback passed to it as props by its parent widget
-            post a widget callback message to the parent iframe
-          */
-          const { isWidgetComponent, requestId, result, targetId } = data;
-          postMessageToChildIframe({
-            id: targetId,
-            message: {
-              isWidgetComponent,
-              result,
-              requestId,
-              type: 'widget.callbackResponse',
-            },
-            targetOrigin: '*',
-          });
+            case 'widget.callbackResponse': {
+              onCallbackResponse({ data });
+              break;
+            }
+            case 'widget.render': {
+              const { widgetId } = data;
+              onRender({
+                data,
+                mountElement,
+                setWidgetCount,
+                widgetSourceBaseUrl: LOCAL_PROXY_WIDGET_URL_PREFIX,
+                widgets,
+              });
+              setUpdates(updates + widgetId);
+              break;
+            }
+            default:
+              break;
+          }
+        } catch (e) {
+          console.error({ event }, e);
         }
-      } catch (e) {
-        console.error({ event }, e);
       }
     }
 
-    window.addEventListener('message', processEvent);
-    return () => window.removeEventListener('message', processEvent);
+    const messageListeners = [
+      buildMessageListener('widget.callback'),
+      buildMessageListener('widget.callbackResponse'),
+      buildMessageListener('widget.render'),
+    ];
+
+    messageListeners.forEach((cb) => window.addEventListener('message', cb));
+    return () => messageListeners.forEach((cb) => window.removeEventListener('message', cb));
   }, []);
 
   if (!rootWidget) {

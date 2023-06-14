@@ -24,16 +24,38 @@ export interface DeserializePropsOptions {
 
 export type EventArgs = { event: any };
 
-export interface EventData {
+export interface CallbackInvocationEventData {
   args: Args;
-  isWidgetComponent: boolean;
   method: string;
   originator: string;
-  props: object;
+  requestId: string;
+  targetId: string;
+  type: WidgetCallbackInvocation;
+}
+
+export interface CallbackResponseEventData {
+  isWidgetComponent: boolean;
   requestId: string;
   result: string;
-  type: EventType;
+  targetId: string;
+  type: WidgetCallbackResponse;
 }
+
+export interface RenderEventData {
+  childWidgets: any[];
+  node: any;
+  widgetId: string;
+  type: WidgetRender;
+}
+
+export interface UpdateEventData {
+  props: NodeProps | WidgetProps;
+  type: WidgetUpdate;
+}
+
+export type EventData = CallbackInvocationEventData
+  | CallbackResponseEventData
+  | RenderEventData;
 
 type WidgetCallbackInvocation = 'widget.callback';
 type WidgetCallbackResponse = 'widget.callbackResponse';

@@ -1,4 +1,5 @@
 import type {
+  Args,
   InvokeCallbackOptions,
   InvokeWidgetCallbackOptions,
   PostMessageEvent,
@@ -44,7 +45,6 @@ export function invokeWidgetCallback({
   callbacks,
   method,
   postCallbackInvocationMessage,
-  props,
   requests,
   serializeArgs,
   widgetId,
@@ -111,7 +111,6 @@ export function buildEventHandler({
   deserializeProps,
   postCallbackInvocationMessage,
   postCallbackResponseMessage,
-  props,
   renderWidget,
   requests,
   serializeArgs,
@@ -124,21 +123,24 @@ export function buildEventHandler({
     let result;
     let shouldRender = false;
 
+    function invokeCallback({ args, method }: { args: Args, method: string }) {
+      return invokeWidgetCallback({
+        args,
+        buildRequest,
+        callbacks,
+        method,
+        postCallbackInvocationMessage,
+        requests,
+        serializeArgs,
+        widgetId,
+      });
+    }
+
     switch (event.data.type) {
-      case 'widget.callback': {
+      case 'widget.callbackInvocation': {
         let { args, method, originator, requestId } = event.data;
         try {
-          ({ isWidgetComponent, result, shouldRender } = invokeWidgetCallback({
-            args,
-            buildRequest,
-            callbacks,
-            method,
-            postCallbackInvocationMessage,
-            props,
-            requests,
-            serializeArgs,
-            widgetId,
-          }));
+          ({ isWidgetComponent, result, shouldRender } = invokeCallback({ args, method }));
         } catch (e: any) {
           error = e as Error;
         }
@@ -152,17 +154,6 @@ export function buildEventHandler({
             targetId: originator,
           });
         }
-        break;
-      }
-      case 'widget.update': {
-        shouldRender = setProps(deserializeProps({
-          buildRequest,
-          callbacks,
-          postCallbackInvocationMessage,
-          props: event.data.props,
-          requests,
-          widgetId,
-        }));
         break;
       }
       case 'widget.callbackResponse': {
@@ -191,11 +182,31 @@ export function buildEventHandler({
 
         if (isWidgetComponent) {
           const { props, src } = value.props;
-          resolver(Widget({ props, src }));
+          resolver(JSON.stringify({ props, src }));
           break;
         }
 
         resolver(value);
+        break;
+      }
+      case 'widget.domCallback': {
+        let { args, method } = event.data;
+        try {
+          ({ isWidgetComponent, result, shouldRender } = invokeCallback({ args, method }));
+        } catch (e: any) {
+          error = e as Error;
+        }
+        break;
+      }
+      case 'widget.update': {
+        shouldRender = setProps(deserializeProps({
+          buildRequest,
+          callbacks,
+          postCallbackInvocationMessage,
+          props: event.data.props,
+          requests,
+          widgetId,
+        }));
         break;
       }
       default: {

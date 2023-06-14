@@ -47,7 +47,7 @@ export function postCallbackInvocationMessage({
     originator: widgetId,
     requestId,
     targetId,
-    type: 'widget.callback',
+    type: 'widget.callbackInvocation',
   });
 }
 

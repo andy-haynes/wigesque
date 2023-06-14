@@ -39,7 +39,7 @@ export function onCallbackInvocation({
       originator,
       requestId,
       targetId,
-      type: 'widget.callback',
+      type: 'widget.callbackInvocation',
     },
     targetOrigin: '*',
   });
@@ -59,6 +59,7 @@ export function onCallbackResponse({
       isWidgetComponent,
       result,
       requestId,
+      targetId,
       type: 'widget.callbackResponse',
     },
     targetOrigin: '*',

@@ -44,7 +44,7 @@ export interface CallbackResponseEventData {
 export interface DomCallbackEventData {
   args: Args;
   method: string;
-  type: WidgetCallbackInvocation;
+  type: WidgetDomCallback;
 }
 
 export interface RenderEventData {
@@ -65,8 +65,9 @@ export type EventData = CallbackInvocationEventData
   | RenderEventData
   | UpdateEventData;
 
-type WidgetCallbackInvocation = 'widget.callback';
+type WidgetCallbackInvocation = 'widget.callbackInvocation';
 type WidgetCallbackResponse = 'widget.callbackResponse';
+type WidgetDomCallback = 'widget.domCallback';
 type WidgetRender = 'widget.render';
 type WidgetUpdate = 'widget.update';
 export type EventType = WidgetCallbackInvocation | WidgetCallbackResponse | WidgetRender | WidgetUpdate;
@@ -95,7 +96,6 @@ export interface InvokeWidgetCallbackOptions {
   callbacks: CallbackMap;
   method: string;
   postCallbackInvocationMessage: PostMessageWidgetInvocationCallback;
-  props: any;
   requests: { [key: string]: CallbackRequest };
   serializeArgs: SerializeArgsCallback;
   widgetId: string;
@@ -191,6 +191,7 @@ export interface ProcessEventOptions {
 export interface Props extends KeyValuePair {
   __domcallbacks: { [key: string]: any };
   __widgetcallbacks: { [key: string]: any };
+  children?: any[];
 }
 
 export type SerializedArgs = Array<string | number | object | any[] | { __widgetMethod: string }>;
@@ -241,6 +242,7 @@ export interface WidgetCallbackInvocationResult {
 }
 
 export interface WidgetProps {
+  children?: any[];
   className: string;
   id: string;
 }

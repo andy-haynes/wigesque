@@ -41,7 +41,7 @@ export default function Web() {
 
           const { data } = event;
           switch (eventType) {
-            case 'widget.callback': {
+            case 'widget.callbackInvocation': {
               onCallbackInvocation({ data });
               break;
             }
@@ -71,7 +71,7 @@ export default function Web() {
     }
 
     const messageListeners = [
-      buildMessageListener('widget.callback'),
+      buildMessageListener('widget.callbackInvocation'),
       buildMessageListener('widget.callbackResponse'),
       buildMessageListener('widget.render'),
     ];

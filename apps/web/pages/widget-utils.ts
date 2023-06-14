@@ -61,7 +61,7 @@ export function deserializeProps({ id, props }: DeserializePropsOptions): any {
           message: {
             args: serializedArgs,
             method: callback.__widgetMethod,
-            type: 'widget.callback',
+            type: 'widget.domCallback',
           },
           targetOrigin: '*',
         });

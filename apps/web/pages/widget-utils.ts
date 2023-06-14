@@ -1,15 +1,12 @@
-import { getIframeId } from "widgets";
 import React from "react";
+import {
+  EventData,
+  getIframeId,
+} from "widgets";
 
 interface IframePostMessageOptions {
   id: string;
-  message: object;
-  targetOrigin: string;
-}
-
-interface IframePostMessageOptions {
-  id: string;
-  message: object;
+  message: EventData;
   targetOrigin: string;
 }
 

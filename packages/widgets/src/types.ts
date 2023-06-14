@@ -41,9 +41,15 @@ export interface CallbackResponseEventData {
   type: WidgetCallbackResponse;
 }
 
+export interface DomCallbackEventData {
+  args: Args;
+  method: string;
+  type: WidgetCallbackInvocation;
+}
+
 export interface RenderEventData {
   childWidgets: any[];
-  node: any;
+  node: SerializedNode;
   widgetId: string;
   type: WidgetRender;
 }
@@ -55,7 +61,9 @@ export interface UpdateEventData {
 
 export type EventData = CallbackInvocationEventData
   | CallbackResponseEventData
-  | RenderEventData;
+  | DomCallbackEventData
+  | RenderEventData
+  | UpdateEventData;
 
 type WidgetCallbackInvocation = 'widget.callback';
 type WidgetCallbackResponse = 'widget.callbackResponse';

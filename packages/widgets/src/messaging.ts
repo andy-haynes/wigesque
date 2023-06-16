@@ -53,7 +53,7 @@ export function postCallbackInvocationMessage({
 
 export function postCallbackResponseMessage({
   error,
-  isWidgetComponent,
+  isComponent,
   requestId,
   result,
   targetId,
@@ -61,7 +61,7 @@ export function postCallbackResponseMessage({
   const serializedError = error && JSON.stringify(error, Object.getOwnPropertyNames(error));
 
   postMessage<PostMessageWidgetCallbackResponse>({
-    isWidgetComponent,
+    isComponent,
     requestId,
     result: JSON.stringify({
       value: result,

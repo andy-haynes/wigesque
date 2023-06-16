@@ -51,7 +51,7 @@ export function invokeWidgetCallback({
 }: InvokeWidgetCallbackOptions): WidgetCallbackInvocationResult {
   if (!callbacks[method]) {
     console.error(`No method ${method} on widget ${widgetId}`);
-    return { isWidgetComponent: false, shouldRender: false };
+    return { isComponent: false, shouldRender: false };
   }
 
   if (typeof args?.some === 'function' && args.some((arg: any) => arg.__widgetMethod)) {
@@ -79,16 +79,14 @@ export function invokeWidgetCallback({
   }
 
   const result = invokeCallback({ args, callback: callbacks[method] });
-  const isWidgetComponent = !!(result
+  const isComponent = !!(result
     && '__k' in result
-    && '__' in result
-    && typeof result.type === 'function'
-    && result.props?.src?.match(/[0-9a-z._-]{5,}\/widget\/[0-9a-z]+/ig));
+    && '__' in result);
 
   return {
-    isWidgetComponent,
+    isComponent,
     result,
-    shouldRender: !isWidgetComponent,
+    shouldRender: !isComponent,
   };
 }
 
@@ -111,7 +109,7 @@ export function buildEventHandler({
   deserializeProps,
   postCallbackInvocationMessage,
   postCallbackResponseMessage,
-  renderChildWidget,
+  renderDom,
   renderWidget,
   requests,
   serializeArgs,
@@ -120,7 +118,7 @@ export function buildEventHandler({
 }: ProcessEventOptions): Function {
   return function processEvent(event: PostMessageEvent) {
     let error = null;
-    let isWidgetComponent = false;
+    let isComponent = false;
     let result;
     let shouldRender = false;
 
@@ -141,7 +139,7 @@ export function buildEventHandler({
       case 'widget.callbackInvocation': {
         let { args, method, originator, requestId } = event.data;
         try {
-          ({ isWidgetComponent, result, shouldRender } = invokeCallback({ args, method }));
+          ({ isComponent, result, shouldRender } = invokeCallback({ args, method }));
         } catch (e: any) {
           error = e as Error;
         }
@@ -149,7 +147,7 @@ export function buildEventHandler({
         if (requestId) {
           postCallbackResponseMessage({
             error,
-            isWidgetComponent,
+            isComponent,
             requestId,
             result,
             targetId: originator,
@@ -158,7 +156,7 @@ export function buildEventHandler({
         break;
       }
       case 'widget.callbackResponse': {
-        const { isWidgetComponent, requestId, result } = event.data;
+        const { isComponent, requestId, result } = event.data;
         if (!(requestId in requests)) {
           console.error(`No request found for request ${requestId}`);
           return;
@@ -191,9 +189,8 @@ export function buildEventHandler({
           return;
         }
 
-        if (isWidgetComponent) {
-          const { props, src } = value.props;
-          resolver(renderChildWidget({ props, src }));
+        if (isComponent) {
+          resolver(renderDom(value));
           break;
         }
 
@@ -203,7 +200,7 @@ export function buildEventHandler({
       case 'widget.domCallback': {
         let { args, method } = event.data;
         try {
-          ({ isWidgetComponent, result, shouldRender } = invokeCallback({ args, method }));
+          ({ isComponent, result, shouldRender } = invokeCallback({ args, method }));
         } catch (e: any) {
           error = e as Error;
         }

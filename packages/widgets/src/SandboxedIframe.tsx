@@ -189,6 +189,23 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           
           renderWidget();
 
+          function preactify(node) {
+            if (!node || typeof node !== 'object') {
+              return node
+            }
+
+            const { props, type } = node;
+            // TODO handle other builtins
+            const isWidget = props.src?.match(/[0-9a-z._-]{5,}\\/widget\\/[0-9a-z]+/ig);
+            const { children } = props;
+
+            return h(
+              isWidget ? Widget : type,
+              props,
+              Array.isArray(children) ? children.map(preactify) : preactify(children)
+            );
+          }
+
           ${invokeCallback.toString()}
           ${invokeWidgetCallback.toString()}
           const processEvent = (${buildEventHandler.toString()})({
@@ -197,7 +214,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             deserializeProps,
             postCallbackInvocationMessage,
             postCallbackResponseMessage,
-            renderChildWidget: ({ src, props }) => h(Widget, { src, props }),
+            renderDom: (node) => preactify(node),
             renderWidget,
             requests,
             serializeArgs,

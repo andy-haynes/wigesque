@@ -34,7 +34,7 @@ export interface CallbackInvocationEventData {
 }
 
 export interface CallbackResponseEventData {
-  isWidgetComponent: boolean;
+  isComponent: boolean;
   requestId: string;
   result: string;
   targetId: string;
@@ -139,7 +139,7 @@ export interface PostMessageWidgetCallbackInvocationOptions {
 
 export type PostMessageWidgetResponseCallback = (message: PostMessageWidgetCallbackResponseOptions) => void;
 export interface PostMessageWidgetCallbackResponse extends PostMessageOptions {
-  isWidgetComponent: boolean;
+  isComponent: boolean;
   requestId: string;
   result: string; // stringified JSON in the form of { result: any, error: string }
   targetId: string;
@@ -147,7 +147,7 @@ export interface PostMessageWidgetCallbackResponse extends PostMessageOptions {
 }
 export interface PostMessageWidgetCallbackResponseOptions {
   error: Error | null;
-  isWidgetComponent: boolean;
+  isComponent: boolean;
   requestId: string;
   result: any;
   targetId: string;
@@ -180,7 +180,7 @@ export interface ProcessEventOptions {
   postCallbackInvocationMessage: PostMessageWidgetInvocationCallback;
   postCallbackResponseMessage: PostMessageWidgetResponseCallback;
   props: any;
-  renderChildWidget: ({ props, src }: { props?: any, src: string }) => object;
+  renderDom: (node: any) => object;
   renderWidget: () => void;
   requests: { [key: string]: CallbackRequest };
   serializeArgs: SerializeArgsCallback;
@@ -236,7 +236,7 @@ export interface SerializedWidgetCallback {
 }
 
 export interface WidgetCallbackInvocationResult {
-  isWidgetComponent: boolean;
+  isComponent: boolean;
   result?: any;
   shouldRender: boolean;
 }

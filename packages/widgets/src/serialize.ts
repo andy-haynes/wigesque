@@ -136,6 +136,10 @@ export function serializeNode({ node, index, childWidgets, callbacks, parentId }
       type: 'div',
       children: 'DropdownMenu',
     },
+    Files: {
+      type: 'div',
+      children: 'Files',
+    },
     InfiniteScroll: {
       type: 'div',
       children: 'InfiniteScroll',
@@ -147,6 +151,18 @@ export function serializeNode({ node, index, childWidgets, callbacks, parentId }
     Markdown: {
       type: 'div',
       children: 'Markdown',
+    },
+    OverlayTrigger: {
+      type: 'div',
+      children: 'OverlayTrigger',
+    },
+    ToolTip: {
+      type: 'div',
+      children: 'ToolTip',
+    },
+    Typeahead: {
+      type: 'div',
+      children: 'Typeahead',
     },
   };
 

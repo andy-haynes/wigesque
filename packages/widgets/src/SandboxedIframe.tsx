@@ -94,12 +94,28 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             return h('span', props, 'loading Dialog...');
           }
       
+          const Files = (props) => {
+            return h('span', props, 'loading Files...');
+          }
+      
           const InfiniteScroll = (props) => {
             return h('span', props, 'loading InfiniteScroll...');
           }
       
           const Markdown = (props) => {
             return h('span', props, 'loading Markdown...');
+          }
+      
+          const OverlayTrigger = (props) => {
+            return h('span', props, 'loading OverlayTrigger...');
+          }
+      
+          const ToolTip = (props) => {
+            return h('span', props, 'loading ToolTip...');
+          }
+      
+          const Typeahead = (props) => {
+            return h('span', props, 'loading Typeahead...');
           }
       
           function Widget({ src, props }) {

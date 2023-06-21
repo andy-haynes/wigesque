@@ -57,7 +57,14 @@ export function initSocial({ cache, endpointBaseUrl, renderWidget, widgetId }: I
     })
       .then((res) => res.json())
       .then((json) => {
-        cache[cacheKey] = Object.keys(json).length ? json : undefined;
+        const key = body?.key || body?.keys?.[0];
+        const isWidgetLookup = key?.match?.(/[\w\d._-]{6,}\/widget\/[\w\d._-]+/i);
+        if (isWidgetLookup) {
+          console.log({ widgetPath: json })
+          cache[cacheKey] = Object.values(json)[0];
+        } else {
+          cache[cacheKey] = Object.keys(json).length ? json : undefined;
+        }
         renderWidget();
       })
       .catch((e) => console.error({ error: e, widgetId }));

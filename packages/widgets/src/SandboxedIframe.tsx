@@ -228,12 +228,12 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
 
             const { props, type } = node;
             // TODO handle other builtins
-            const isWidget = props.src?.match(/[0-9a-z._-]{5,}\\/widget\\/[0-9a-z]+/ig);
+            const isWidget = !!props.src?.match(/[0-9a-z._-]{5,}\\/widget\\/[0-9a-z._-]+/ig);
             const { children } = props;
 
             return h(
               isWidget ? Widget : type,
-              props,
+              { ...props, key: node.key || props.key },
               Array.isArray(children) ? children.map(preactify) : preactify(children)
             );
           }

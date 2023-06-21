@@ -140,6 +140,10 @@ export function serializeNode({ node, index, childWidgets, callbacks, parentId }
       type: 'div',
       children: 'Files',
     },
+    Fragment: {
+      type: 'div',
+      children: 'Fragment',
+    },
     InfiniteScroll: {
       type: 'div',
       children: 'InfiniteScroll',
@@ -156,9 +160,9 @@ export function serializeNode({ node, index, childWidgets, callbacks, parentId }
       type: 'div',
       children: 'OverlayTrigger',
     },
-    ToolTip: {
+    Tooltip: {
       type: 'div',
-      children: 'ToolTip',
+      children: 'Tooltip',
     },
     Typeahead: {
       type: 'div',

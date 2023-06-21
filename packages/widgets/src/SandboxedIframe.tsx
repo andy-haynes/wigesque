@@ -82,6 +82,10 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             return h('span', props, 'loading CommitButton...');
           }
       
+          const Fragment = (props) => {
+            return h('span', props, 'loading Fragment...');
+          }
+      
           const IpfsImageUpload = (props) => {
             return h('span', props, 'loading IpfsImageUpload...');
           }
@@ -110,8 +114,8 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             return h('span', props, 'loading OverlayTrigger...');
           }
       
-          const ToolTip = (props) => {
-            return h('span', props, 'loading ToolTip...');
+          const Tooltip = (props) => {
+            return h('span', props, 'loading Tooltip...');
           }
       
           const Typeahead = (props) => {

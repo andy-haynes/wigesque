@@ -187,9 +187,7 @@ export function serializeNode({ node, index, childWidgets, callbacks, parentId }
       type = BUILTIN_COMPONENTS[component].type;
     } else if (component === 'Widget') {
       const { src, props: widgetProps } = props;
-      // FIXME this breaks when the order of children changes
-      //  needs a deterministic key (hash the internal widget state?)
-      //  to distinguish between sibling widgets with the same source
+      // TODO generate IDs at transpile time and inject them as props on the Widget
       const widgetId = [src, index, JSON.stringify(widgetProps || {}).replace(/["{} ]/g, '')].join('##');
       try {
         childWidgets.push({

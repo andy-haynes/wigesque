@@ -20,6 +20,7 @@ import {
   serializeNode,
   serializeProps,
 } from './serialize';
+import { defineBuiltinComponents } from "./builtins";
 
 function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scriptSrc: string, widgetProps: any }) {
   const widgetPath = id.split('::')[0];
@@ -73,58 +74,22 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           /* END PREACT FORK */
 
           const { h, render } = window.preact;
-      
-          const Checkbox = (props) => {
-            return h('span', props, 'loading Checkbox...');
-          }
-      
-          const CommitButton = (props) => {
-            return h('span', props, 'loading CommitButton...');
-          }
-      
-          const Fragment = (props) => {
-            return h('span', props, 'loading Fragment...');
-          }
-      
-          const IpfsImageUpload = (props) => {
-            return h('span', props, 'loading IpfsImageUpload...');
-          }
-      
-          const Dialog = (props) => {
-            return h('span', props, 'loading Dialog...');
-          }
-      
-          const DropdownMenu = (props) => {
-            return h('span', props, 'loading Dialog...');
-          }
-      
-          const Files = (props) => {
-            return h('span', props, 'loading Files...');
-          }
-      
-          const InfiniteScroll = (props) => {
-            return h('span', props, 'loading InfiniteScroll...');
-          }
-      
-          const Markdown = (props) => {
-            return h('span', props, 'loading Markdown...');
-          }
-      
-          const OverlayTrigger = (props) => {
-            return h('span', props, 'loading OverlayTrigger...');
-          }
-      
-          const Tooltip = (props) => {
-            return h('span', props, 'loading Tooltip...');
-          }
-      
-          const Typeahead = (props) => {
-            return h('span', props, 'loading Typeahead...');
-          }
-      
-          function Widget({ src, props }) {
-            return h('div', props, 'loading ' + src + '...');
-          }
+          
+          const {
+            Checkbox,
+            CommitButton,
+            Fragment,
+            IpfsImageUpload,
+            Dialog,
+            DropdownMenu,
+            Files,
+            InfiniteScroll,
+            Markdown,
+            OverlayTrigger,
+            Tooltip,
+            Typeahead,
+            Widget,
+          } = ${defineBuiltinComponents()}(h);
 
           let isStateInitialized = false;
 

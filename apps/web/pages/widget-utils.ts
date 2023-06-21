@@ -1,4 +1,5 @@
 import React from "react";
+import type { DOMElement } from "react";
 import {
   EventData,
   getIframeId,
@@ -15,7 +16,7 @@ interface DeserializePropsOptions {
   props: any;
 }
 
-export interface WidgetDOMElement extends React.DOMElement<any, any> {}
+export interface WidgetDOMElement extends DOMElement<any, any> {}
 
 interface CreateElementOptions {
   children?: any;
@@ -68,6 +69,9 @@ export function deserializeProps({ id, props }: DeserializePropsOptions): any {
       }
     });
 
+  delete props.__domcallbacks;
+  delete props.__widgetcallbacks;
+
   return props;
 }
 
@@ -113,4 +117,4 @@ export function createChildElements({ children, depth, index, parentId }: Create
     index: i,
     parentId,
   }));
-};
+}

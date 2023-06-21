@@ -80,7 +80,7 @@ export function onRender({
   const componentChildren = createChildElements({ children, depth: 0, parentId: widgetId });
   const element = createElement({
     children: [
-      React.createElement('span', { className: 'dom-label' }, `[${widgetId.split('::')[0]}]`),
+      React.createElement('span', { className: 'dom-label' }, `[${widgetId.split('##')[0]}]`),
       React.createElement('br'),
       ...(Array.isArray(componentChildren) ? componentChildren : [componentChildren]),
     ],

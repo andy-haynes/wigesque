@@ -127,17 +127,29 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           }
 
           let isStateInitialized = false;
-          let state = {};
 
           /* NS shims */
-          let props = deserializeProps({
+          function buildSafeProxy(p) {
+            return new Proxy(p, {
+              get(target, key) {
+                try {
+                  return target[key];                
+                } catch {
+                  return undefined;
+                }
+              }
+            });
+          }
+
+          let state = buildSafeProxy({});
+          let props = buildSafeProxy(deserializeProps({
             buildRequest,
             callbacks,
             postCallbackInvocationMessage,
             props: JSON.parse("${jsonWidgetProps.replace(/"/g, "\\\"")}"),
             requests,
             widgetId: '${id}',
-          });
+          }));
 
           function asyncFetch(url, options) {
             return fetch(url, options)
@@ -190,20 +202,20 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             render(await WidgetWrapper(), document.getElementById('${id}'));
           }
 
-          const context = { accountId: 'andyh.near' };
+          const context = buildSafeProxy({ accountId: props.accountId || 'andyh.near' });
           const State = {
             init(obj) {
               if (!isStateInitialized) {
-                state = obj;
+                state = buildSafeProxy(obj);
                 isStateInitialized = true;
               }
             },
             update(newState, initialState) {
               // TODO real implementation
-              state = {
+              state = buildSafeProxy({
                 ...state,
                 ...newState,
-              };
+              });
             },
           };
           
@@ -243,7 +255,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                 return false;
               }
 
-              props = newProps;
+              props = buildSafeProxy(newProps);
               return true;
             },
             widgetId: '${id}'

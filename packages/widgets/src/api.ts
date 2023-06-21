@@ -3,20 +3,20 @@ import type {
   InitSocialOptions,
 } from './types';
 
-export function initNear({ requests, renderWidget, rpcUrl }: InitNearOptions): any {
+export function initNear({ cache, renderWidget, rpcUrl }: InitNearOptions): any {
   /* @ts-expect-error */
   const provider = new window.nearApi.providers.JsonRpcProvider(rpcUrl);
   return {
-    block(blockHeightOrFinality: number | string) {
-      const reqKey = JSON.stringify({ blockHeightOrFinality, type: 'block' });
-      const request = requests[reqKey];
-      if (request || (reqKey in requests && request === undefined)) {
-        delete requests[reqKey];
-        return request;
+    block(blockHeightOrFinality: string) {
+      const cacheKey = JSON.stringify({ blockHeightOrFinality: blockHeightOrFinality.toString(), type: 'block' });
+      const block = cache[cacheKey];
+      if (block || (cacheKey in cache && block === undefined)) {
+        setTimeout(() => delete cache[cacheKey], 5000);
+        return block;
       }
       provider.block({ finality: blockHeightOrFinality })
         .then((block: any) => {
-          requests[reqKey] = block;
+          cache[cacheKey] = block;
           renderWidget();
         })
         .catch(console.error);

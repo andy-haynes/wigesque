@@ -34,11 +34,17 @@ export function initNear({ requests, renderWidget, rpcUrl }: InitNearOptions): a
       });
     },
   };
+}
 
+interface SocialQueryOptions {
+  action?: string;
+  key?: string;
+  keys?: string[];
+  options?: any;
 }
 
 export function initSocial({ cache, endpointBaseUrl, renderWidget, widgetId }: InitSocialOptions) {
-  function cachedQuery({ apiEndpoint, body, cacheKey }: { apiEndpoint: string, body: object, cacheKey: string }) {
+  function cachedQuery({ apiEndpoint, body, cacheKey }: { apiEndpoint: string, body: SocialQueryOptions, cacheKey: string }) {
     const cached = cache[cacheKey];
     if (cached || (cacheKey in cache && cached === undefined)) {
       return cached;

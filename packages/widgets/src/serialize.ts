@@ -10,9 +10,23 @@ import type {
 
 export function serializeProps({ callbacks, index, parentId, props, widgetId }: SerializePropsOptions): Props {
   return Object.entries(props)
-    .reduce((newProps, [key, value]) => {
-      if (typeof value !== 'function') {
-        newProps[key] = value;
+    .reduce((newProps, [key, value]: [string, any]) => {
+      const isComponent = value?.props && ('__' in value && '__k' in value);
+      const isFunction = typeof value === 'function';
+
+      if (!isFunction) {
+        let serializedValue = value;
+        if (isComponent) {
+          serializedValue = serializeNode({
+            callbacks,
+            childWidgets: [],
+            index: 0,
+            node: value,
+            parentId,
+          });
+        }
+
+        newProps[key] = serializedValue;
         return newProps;
       }
 

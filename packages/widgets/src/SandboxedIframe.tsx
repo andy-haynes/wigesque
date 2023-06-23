@@ -111,7 +111,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             buildRequest,
             callbacks,
             postCallbackInvocationMessage,
-            props: JSON.parse("${jsonWidgetProps.replace(/"/g, "\\\"")}"),
+            props: JSON.parse('${jsonWidgetProps.replace(/'/g, "\\'").replace(/\\n/g, "\\\n").replace(/\\"/g, '\\\\"')}'),
             requests,
             widgetId: '${id}',
           }));

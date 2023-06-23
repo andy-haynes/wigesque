@@ -58,16 +58,25 @@ export function initSocial({ cache, endpointBaseUrl, renderWidget, widgetId }: I
       .then((res) => res.json())
       .then((json) => {
         const key = body?.key || body?.keys?.[0];
-        const isWidgetLookup = key?.match?.(/[\w\d._-]{6,}\/widget\/[\w\d._-]+/i);
+        const isWidgetLookup = (key as string)?.match?.(/[\w\d._-]{6,}\/widget\/[\w\d._-]+/i);
         if (isWidgetLookup) {
-          console.log({ widgetPath: json })
           cache[cacheKey] = Object.values(json)[0];
+        } else if (key) {
+          const path = typeof key === 'string' ? key : key.path;
+          const target = path.split('/')
+            .reduce((val, pathComponent) => {
+              if (!val) {
+                return val;
+              }
+              return val[pathComponent];
+            }, json as any);
+          cache[cacheKey] = target;
         } else {
           cache[cacheKey] = Object.keys(json).length ? json : undefined;
         }
         renderWidget();
       })
-      .catch((e) => console.error({ error: e, widgetId }));
+      .catch((e) => console.log({ apiEndpoint, body, error: e, widgetId }));
 
     return null;
   }

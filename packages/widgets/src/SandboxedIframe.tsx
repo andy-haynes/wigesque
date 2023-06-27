@@ -49,14 +49,25 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           ${serializeNode.toString()}
           ${serializeProps.toString()}
 
+          let lastRenderedNode;
           const dispatchRenderEvent = (node) => {
-            const { childWidgets, ...serialized } = serializeNode({
+            const serializedNode = serializeNode({
               node,
               index: -1,
               childWidgets: [],
               callbacks,
               parentId: '${id}',
             });
+
+            // TODO is this a band-aid for cascading renders?
+            // TODO compare non-serializable properties
+            const stringifiedNode = JSON.stringify(serializedNode);
+            if (lastRenderedNode === stringifiedNode) {
+              return;
+            }
+            lastRenderedNode = stringifiedNode;
+
+            const { childWidgets, ...serialized } = serializedNode;
 
             try {
               postWidgetRenderMessage({

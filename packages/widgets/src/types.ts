@@ -226,7 +226,6 @@ export interface SerializedProps extends KeyValuePair {
 export interface SerializePropsOptions {
   callbacks: CallbackMap;
   h: (type: string | Function, props: any, children: any) => any;
-  index: number;
   parentId: string;
   props: any;
   widgetId?: string;

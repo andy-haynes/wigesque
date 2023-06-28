@@ -8,7 +8,7 @@ import type {
   SerializedNode,
 } from './types';
 
-export function serializeProps({ callbacks, h, index, parentId, props, widgetId }: SerializePropsOptions): Props {
+export function serializeProps({ callbacks, h, parentId, props, widgetId }: SerializePropsOptions): Props {
   return Object.entries(props)
     .reduce((newProps, [key, value]: [string, any]) => {
       const isComponent = value?.props && ('__' in value && '__k' in value);
@@ -219,7 +219,7 @@ export function serializeNode({ h, node, index, childWidgets, callbacks, parentI
       const widgetId = [src, index, JSON.stringify(widgetProps || {}).replace(/["{} ]/g, '')].join('##');
       try {
         childWidgets.push({
-          props: widgetProps ? serializeProps({ props: widgetProps, callbacks, h, index, parentId, widgetId }) : {},
+          props: widgetProps ? serializeProps({ props: widgetProps, callbacks, h, parentId, widgetId }) : {},
           source: src,
           widgetId,
         });

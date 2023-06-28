@@ -215,6 +215,15 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             );
           }
 
+          function isMatchingProps(props, compareProps) {
+            const getComparable = (p) => Object.keys(p)
+              .sort()
+              .map((propKey) => propKey + '::' + p[propKey])
+              .join(',');
+
+            return getComparable(props) === getComparable(compareProps);
+          }
+
           ${invokeCallback.toString()}
           ${invokeWidgetCallback.toString()}
           const processEvent = (${buildEventHandler.toString()})({
@@ -228,7 +237,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             requests,
             serializeArgs,
             setProps: (newProps) => {
-              if (JSON.stringify(props) === JSON.stringify(newProps)) {
+              if (isMatchingProps({ ...props }, newProps)) {
                 return false;
               }
 

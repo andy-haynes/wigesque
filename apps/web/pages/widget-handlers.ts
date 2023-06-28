@@ -17,6 +17,7 @@ interface CallbackResponseHandlerOptions {
 
 interface RenderHandlerOptions {
   data: RenderEventData;
+  incrementUpdateMetrics: () => void;
   mountElement: ({ widgetId, element }: { widgetId: string, element: any }) => void;
   setWidgetCount: (n: number) => void;
   widgetSourceBaseUrl: string;
@@ -68,6 +69,7 @@ export function onCallbackResponse({
 
 export function onRender({
   data,
+  incrementUpdateMetrics,
   mountElement,
   setWidgetCount,
   widgetSourceBaseUrl,
@@ -107,6 +109,7 @@ export function onRender({
       setWidgetCount(Object.keys(widgets).length);
     } else {
       /* widget iframe is already loaded, post update message to iframe */
+      incrementUpdateMetrics();
       postMessageToChildIframe({
         id: widgetId,
         message: {

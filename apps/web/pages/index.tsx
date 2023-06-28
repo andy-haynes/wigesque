@@ -11,6 +11,8 @@ const DEFAULT_ROOT_WIDGET = 'mob.near/widget/Welcome'
 const roots = {} as { [key: string]: ReactDOM.Root };
 const widgets = {} as { [key: string]: any };
 
+const metrics = { renders: 0, updates: 0, callbackInvocations: 0, callbackResponses: 0 };
+
 function mountElement({ widgetId, element }: { widgetId: string, element: WidgetDOMElement }) {
   if (!roots[widgetId]) {
     const domElement = document.getElementById(getAppDomId(widgetId));
@@ -42,17 +44,21 @@ export default function Web() {
           const { data } = event;
           switch (eventType) {
             case 'widget.callbackInvocation': {
+              metrics.callbackInvocations++;
               onCallbackInvocation({ data });
               break;
             }
             case 'widget.callbackResponse': {
+              metrics.callbackResponses++;
               onCallbackResponse({ data });
               break;
             }
             case 'widget.render': {
               const { widgetId } = data;
+              metrics.renders++;
               onRender({
                 data,
+                incrementUpdateMetrics: () => metrics.updates++,
                 mountElement,
                 setWidgetCount,
                 widgetSourceBaseUrl: LOCAL_PROXY_WIDGET_URL_PREFIX,
@@ -101,6 +107,10 @@ export default function Web() {
   return (
     <div className='App'>
       <h6>{widgetCount} widgets rendered</h6>
+      <h6>{metrics.renders} renders</h6>
+      <h6>{metrics.updates} updates</h6>
+      <h6>{metrics.callbackInvocations} invocations</h6>
+      <h6>{metrics.callbackResponses} responses</h6>
       <div id={getAppDomId(rootWidget)} className='iframe'>
         root widget goes here
       </div>

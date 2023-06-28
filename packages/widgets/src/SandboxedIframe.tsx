@@ -241,7 +241,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
                 return false;
               }
 
-              props = buildSafeProxy(newProps);
+              props = buildSafeProxy({ ...props, ...newProps });
               return true;
             },
             widgetId: '${id}'

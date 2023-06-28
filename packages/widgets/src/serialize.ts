@@ -25,6 +25,8 @@ export function serializeProps({ callbacks, h, parentId, props, widgetId }: Seri
             node: value,
             parentId,
           });
+        } else if (typeof value === 'string') {
+          serializedValue = serializedValue.replace(/⁣/g, '\n')
         }
 
         newProps[key] = serializedValue;

@@ -22,9 +22,11 @@ import {
 } from './serialize';
 import { defineBuiltinComponents } from "./builtins";
 
+const NEWLINE_ESCAPE_CHAR = '⁣';
+
 function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scriptSrc: string, widgetProps: any }) {
   const widgetPath = id.split('::')[0];
-  const jsonWidgetProps = widgetProps ? JSON.stringify(widgetProps) : '{}';
+  const jsonWidgetProps = widgetProps ? JSON.stringify(widgetProps).replace(/\\n/g, NEWLINE_ESCAPE_CHAR) : '{}';
 
   return `
     <html>
@@ -123,7 +125,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             buildRequest,
             callbacks,
             postCallbackInvocationMessage,
-            props: JSON.parse('${jsonWidgetProps.replace(/'/g, "\\'").replace(/\\n/g, "\\\n").replace(/\\"/g, '\\\\"')}'),
+            props: JSON.parse('${jsonWidgetProps.replace(/'/g, "\\'").replace(/\\n/g, NEWLINE_ESCAPE_CHAR).replace(/\\"/g, '\\\\"')}'),
             requests,
             widgetId: '${id}',
           }));

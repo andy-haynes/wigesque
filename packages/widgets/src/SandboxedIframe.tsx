@@ -59,6 +59,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           const dispatchRenderEvent = (node) => {
             const serializedNode = serializeNode({
               node,
+              h,
               index: -1,
               childWidgets: [],
               callbacks,
@@ -204,7 +205,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
 
           function preactify(node) {
             if (!node || typeof node !== 'object') {
-              return node
+              return node;
             }
 
             const { props, type } = node;

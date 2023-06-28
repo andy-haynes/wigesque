@@ -8,7 +8,7 @@ import type {
   SerializedNode,
 } from './types';
 
-export function serializeProps({ callbacks, index, parentId, props, widgetId }: SerializePropsOptions): Props {
+export function serializeProps({ callbacks, h, index, parentId, props, widgetId }: SerializePropsOptions): Props {
   return Object.entries(props)
     .reduce((newProps, [key, value]: [string, any]) => {
       const isComponent = value?.props && ('__' in value && '__k' in value);
@@ -20,6 +20,7 @@ export function serializeProps({ callbacks, index, parentId, props, widgetId }: 
           serializedValue = serializeNode({
             callbacks,
             childWidgets: [],
+            h,
             index: 0,
             node: value,
             parentId,
@@ -131,7 +132,7 @@ export function deserializeProps({
   };
 }
 
-export function serializeNode({ node, index, childWidgets, callbacks, parentId }: SerializeNodeOptions): SerializedNode {
+export function serializeNode({ h, node, index, childWidgets, callbacks, parentId }: SerializeNodeOptions): SerializedNode {
 // TODO implement these for real
   const BUILTIN_COMPONENTS = {
     Checkbox: {
@@ -166,10 +167,7 @@ export function serializeNode({ node, index, childWidgets, callbacks, parentId }
       type: 'button',
       children: 'IpfsImageUpload',
     },
-    Markdown: {
-      type: 'div',
-      children: 'Markdown',
-    },
+    Markdown: ({ children, props } : { children: any[], props?: { text: string } }) => h('div', props,  [props?.text, ...children]),
     OverlayTrigger: {
       type: 'div',
       children: 'OverlayTrigger',
@@ -186,10 +184,10 @@ export function serializeNode({ node, index, childWidgets, callbacks, parentId }
 
   let { type } = node;
   const { children } = node.props;
-  const props = { ...node.props };
+  let props = { ...node.props };
   delete props.children;
 
-  const unifiedChildren = Array.isArray(children)
+  let unifiedChildren = Array.isArray(children)
     ? children
     : [children];
 
@@ -202,14 +200,26 @@ export function serializeNode({ node, index, childWidgets, callbacks, parentId }
       // @ts-expect-error
     } else if (BUILTIN_COMPONENTS[component]) {
       // @ts-expect-error
-      type = BUILTIN_COMPONENTS[component].type;
+      const builtin = BUILTIN_COMPONENTS[component];
+      if (typeof builtin === 'function') {
+        ({
+          children: unifiedChildren,
+          props,
+          type,
+        } = builtin({
+          children: unifiedChildren,
+          props,
+        }))
+      } else {
+        type = builtin.type;
+      }
     } else if (component === 'Widget') {
       const { src, props: widgetProps } = props;
       // TODO generate IDs at transpile time and inject them as props on the Widget
       const widgetId = [src, index, JSON.stringify(widgetProps || {}).replace(/["{} ]/g, '')].join('##');
       try {
         childWidgets.push({
-          props: widgetProps ? serializeProps({ props: widgetProps, callbacks, index, parentId, widgetId }) : {},
+          props: widgetProps ? serializeProps({ props: widgetProps, callbacks, h, index, parentId, widgetId }) : {},
           source: src,
           widgetId,
         });
@@ -223,7 +233,7 @@ export function serializeNode({ node, index, childWidgets, callbacks, parentId }
           id: 'dom-' + widgetId,
           className: 'iframe',
         },
-      }
+      };
     }
   }
 

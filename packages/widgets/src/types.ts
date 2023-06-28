@@ -203,6 +203,7 @@ export interface SerializeArgsOptions {
 }
 
 export interface SerializeNodeOptions {
+  h: (type: string | Function, props: any, children: any) => any;
   node: any;
   index: number;
   childWidgets: any[];
@@ -224,6 +225,7 @@ export interface SerializedProps extends KeyValuePair {
 
 export interface SerializePropsOptions {
   callbacks: CallbackMap;
+  h: (type: string | Function, props: any, children: any) => any;
   index: number;
   parentId: string;
   props: any;

@@ -33,7 +33,7 @@ export function defineBuiltinComponents() {
       },
 
       Markdown(props: any) {
-        return h('span', props, 'loading Markdown...');
+        return h('span', props, props.text);
       },
 
       OverlayTrigger(props: any) {

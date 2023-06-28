@@ -176,7 +176,11 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           }
       
           async function renderWidget() {
-            render(await WidgetWrapper(), document.getElementById('${id}'));
+            try {
+              render(await WidgetWrapper(), document.getElementById('${id}'));              
+            } catch (e) {
+              console.error(e, { widgetId: '${id}' });
+            }
           }
 
           const context = buildSafeProxy({ accountId: props.accountId || 'andyh.near' });

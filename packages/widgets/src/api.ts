@@ -50,7 +50,7 @@ interface SocialQueryOptions {
 }
 
 export function initSocial({ cache, endpointBaseUrl, renderWidget, widgetId }: InitSocialOptions) {
-  function cachedQuery({ apiEndpoint, body, cacheKey, method }: { apiEndpoint: string, body: SocialQueryOptions, cacheKey: string, method?: string }) {
+  function cachedQuery({ apiEndpoint, body, cacheKey }: { apiEndpoint: string, body: SocialQueryOptions, cacheKey: string }) {
     const cached = cache[cacheKey];
     if (cached || (cacheKey in cache && cached === undefined)) {
       return cached;

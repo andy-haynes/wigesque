@@ -36,44 +36,74 @@ export function initNear({ cache, renderWidget, rpcUrl }: InitNearOptions): any 
   };
 }
 
+interface SocialQueryKey {
+  blockHeight?: number;
+  path?: string;
+  type?: string;
+}
+
 interface SocialQueryOptions {
   action?: string;
-  key?: string;
-  keys?: string[];
+  key?: SocialQueryKey | string;
   options?: any;
+  keys?: string | string[];
 }
 
 export function initSocial({ cache, endpointBaseUrl, renderWidget, widgetId }: InitSocialOptions) {
-  function cachedQuery({ apiEndpoint, body, cacheKey }: { apiEndpoint: string, body: SocialQueryOptions, cacheKey: string }) {
+  function cachedQuery({ apiEndpoint, body, cacheKey, method }: { apiEndpoint: string, body: SocialQueryOptions, cacheKey: string, method?: string }) {
     const cached = cache[cacheKey];
     if (cached || (cacheKey in cache && cached === undefined)) {
       return cached;
     }
 
+    function deepEscape(value: any): any {
+      if (typeof value === 'string') {
+        return value.replace(/\n/g, '⁣');
+      }
+
+      if (Array.isArray(value)) {
+        return value.map(deepEscape);
+      }
+
+      if (value?.toString() === '[object Object]') {
+        return Object.entries(value)
+          .reduce((escaped, [k, v]) => {
+            escaped[k] = deepEscape(v);
+            return escaped;
+          }, {} as { [key: string]: any });
+      }
+
+      return value;
+    }
+
     fetch(apiEndpoint, {
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        ...body,
+        ...(body.keys && { keys: Array.isArray(body.keys) ? body.keys : [body.keys] }),
+      }),
       headers: { 'Content-Type': 'application/json' },
       method: 'POST',
     })
       .then((res) => res.json())
       .then((json) => {
-        const key = body?.key || body?.keys?.[0];
-        const isWidgetLookup = (key as string)?.match?.(/[\w\d._-]{6,}\/widget\/[\w\d._-]+/i);
-        if (isWidgetLookup) {
-          cache[cacheKey] = Object.values(json)[0];
-        } else if (key) {
-          const path = typeof key === 'string' ? key : key.path;
-          const target = path.split('/')
+        let escapedJson = deepEscape(json);
+        const { keys } = body;
+        const unwrap = (result: { [key: string]: any }, path: string): object | string => {
+          return path.split('/')
+            .filter((p) => p !== '*' && p !== '**')
             .reduce((val, pathComponent) => {
               if (!val) {
                 return val;
               }
               return val[pathComponent];
-            }, json as any);
-          cache[cacheKey] = target;
-        } else {
-          cache[cacheKey] = Object.keys(json).length ? json : undefined;
+            }, result);
+        };
+
+        if (typeof keys === 'string') {
+          escapedJson = unwrap(escapedJson, keys);
         }
+
+        cache[cacheKey] = escapedJson;
         renderWidget();
       })
       .catch((e) => console.log({ apiEndpoint, body, error: e, widgetId }));
@@ -82,33 +112,32 @@ export function initSocial({ cache, endpointBaseUrl, renderWidget, widgetId }: I
   }
 
   return {
-    get(keys: string[]/*, finality, options*/) {
+    get(patterns: string | string[]/*, finality, options*/) {
       return cachedQuery({
         apiEndpoint: `${endpointBaseUrl}/get`,
-        body: { keys: Array.isArray(keys) ? keys : [keys] },
-        cacheKey: JSON.stringify(keys),
+        body: { keys: patterns },
+        cacheKey: JSON.stringify(patterns),
       });
     },
-    getr(keys: string[]/*, finality, options*/) {
-      // TODO expand keys for recursive get
-      return cachedQuery({
-        apiEndpoint: `${endpointBaseUrl}/get`,
-        body: { keys: Array.isArray(keys) ? keys : [keys] },
-        cacheKey: JSON.stringify(keys),
-      });
+    getr(patterns: string | string[]/*, finality, options*/) {
+      if (typeof patterns === 'string') {
+        return this.get(`${patterns}/**`);
+      }
+
+      return this.get(patterns.map((p) => `${p}/**`));
     },
-    index(action: string, key: string, options: object) {
+    index(action: string, key: string | SocialQueryKey, options: object) {
       return cachedQuery({
         apiEndpoint: `${endpointBaseUrl}/index`,
         body: { action, key, options },
         cacheKey: JSON.stringify({ action, key, options }),
       });
     },
-    keys(keys: string[]/*, finality, options*/) {
+    keys(patterns: string[]/*, finality, options*/) {
       return cachedQuery({
         apiEndpoint: `${endpointBaseUrl}/keys`,
-        body: { keys: Array.isArray(keys) ? keys : [keys] },
-        cacheKey: JSON.stringify(keys),
+        body: { keys: Array.isArray(patterns) ? patterns : [patterns] },
+        cacheKey: JSON.stringify(patterns),
       });
     }
   };

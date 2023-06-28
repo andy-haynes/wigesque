@@ -240,11 +240,12 @@ export function serializeNode({ h, node, index, childWidgets, callbacks, parentI
   return {
     type,
     props: {
-      ...serializeProps({ props, index, callbacks, parentId }),
+      ...serializeProps({ props, h, callbacks, parentId }),
       children: unifiedChildren
         .flat()
         .map((c, i) => c?.props ? serializeNode({
             node: c,
+            h,
             index: i,
             childWidgets,
             callbacks,

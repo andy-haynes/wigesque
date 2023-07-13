@@ -18,11 +18,18 @@ export function getIframeId(id: string) {
 export function Widget({ id, sourceUrl, widgetProps }: { id: string, sourceUrl: string, widgetProps?: any }) {
     const [source, setSource] = useState(null);
 
+    // instance-scoped flag indicating whether the source for this widget has been rendered
+    // React Strict Mode means the fetch is called this twice, causing issues with identifiers
+    let sourceFetched =  false;
+
     useEffect(() => {
         (async function () {
-            const res = await fetch(sourceUrl);
-            const { source: appSource } = await res.json();
-            setSource(appSource);
+            if (!sourceFetched) {
+                sourceFetched = true;
+                const res = await fetch(sourceUrl);
+                const { source: appSource } = await res.json();
+                setSource(appSource);
+            }
         }());
     }, []);
 

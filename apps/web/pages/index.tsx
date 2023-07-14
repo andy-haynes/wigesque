@@ -116,15 +116,16 @@ export default function Web() {
       </div>
       <div className="iframes">
         <h5>here be hidden iframes</h5>
-        <Widget
-          key={0}
-          id={rootWidget}
-          sourceUrl={`${LOCAL_PROXY_WIDGET_URL_PREFIX}/${rootWidget}`}
-        />
+        <div key={0} widget-id={rootWidget}>
+          <Widget
+            id={rootWidget}
+            sourceUrl={`${LOCAL_PROXY_WIDGET_URL_PREFIX}/${rootWidget}`}
+          />
+        </div>
         {
           Object.entries(widgets)
             .map(([widgetId, { props, sourceUrl }]) => (
-              <div key={widgetId}>
+              <div key={widgetId} widget-id={widgetId}>
                 <Widget
                   id={widgetId}
                   sourceUrl={sourceUrl}

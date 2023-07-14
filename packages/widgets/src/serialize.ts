@@ -211,13 +211,13 @@ export function serializeNode({ h, node, index, childWidgets, callbacks, parentI
       const builtin = BUILTIN_COMPONENTS[component];
       if (typeof builtin === 'function') {
         ({
-          children: unifiedChildren,
           props,
           type,
         } = builtin({
           children: unifiedChildren,
           props,
-        }))
+        }));
+        unifiedChildren = props.children;
       } else {
         type = builtin.type;
       }

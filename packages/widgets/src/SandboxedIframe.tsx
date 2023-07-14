@@ -58,6 +58,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
           ${serializeProps.toString()}
 
           let lastRenderedNode;
+          // FIXME circular dependency between [dispatchRenderEvent] (referenced in Preact fork) and [h] (used to render builtin components) 
           const dispatchRenderEvent = (node) => {
             const serializedNode = serializeNode({
               node,

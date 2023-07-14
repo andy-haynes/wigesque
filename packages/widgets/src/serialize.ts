@@ -193,6 +193,12 @@ export function serializeNode({ h, node, index, childWidgets, callbacks, parentI
     ? children
     : [children];
 
+  unifiedChildren
+    .filter((child) => child && typeof child === 'object' && 'childWidgets' in child)
+    .forEach((child) => {
+      child.childWidgets.forEach((childWidget: any) => childWidgets.push(childWidget));
+    });
+
   if (!type) {
     type = 'div';
   } else if (typeof type === 'function') {

@@ -20,7 +20,6 @@ import {
   serializeNode,
   serializeProps,
 } from './serialize';
-import { defineBuiltinComponents } from "./builtins";
 
 const NEWLINE_ESCAPE_CHAR = '⁣';
 
@@ -89,22 +88,22 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
               console.warn('failed to dispatch render for ${id}', { error, serialized });
             }
           }
-          
-          const {
-            Checkbox,
-            CommitButton,
-            Fragment,
-            IpfsImageUpload,
-            Dialog,
-            DropdownMenu,
-            Files,
-            InfiniteScroll,
-            Markdown,
-            OverlayTrigger,
-            Tooltip,
-            Typeahead,
-            Widget,
-          } = ${defineBuiltinComponents()}(h);
+
+          // builtin components must have references defined in order for the Widget to render
+          // builtin components are resolved during serialization 
+          function Checkbox() {}
+          function CommitButton() {}
+          function Fragment() {}
+          function IpfsImageUpload() {}
+          function Dialog() {}
+          function DropdownMenu() {}
+          function Files() {}
+          function InfiniteScroll() {}
+          function Markdown() {}
+          function OverlayTrigger() {}
+          function Tooltip() {}
+          function Typeahead() {}
+          function Widget() {}
 
           let isStateInitialized = false;
 

@@ -223,8 +223,15 @@ export function serializeNode({ h, node, index, childWidgets, callbacks, parentI
       }
     } else if (component === 'Widget') {
       const { src, props: widgetProps } = props;
-      // TODO generate IDs at transpile time and inject them as props on the Widget
-      const widgetId = [src, index, JSON.stringify(widgetProps || {}).replace(/["{} ]/g, '')].join('##');
+
+      const base64Props = btoa(
+        Array.from(
+          (new TextEncoder()).encode(JSON.stringify(widgetProps || {})),
+          (byte) => String.fromCodePoint(byte)
+        ).join('')
+      );
+
+      const widgetId = [src, base64Props.slice(0, 1024)].join('##');
       try {
         childWidgets.push({
           props: widgetProps ? serializeProps({ props: widgetProps, callbacks, h, parentId, widgetId }) : {},
@@ -262,5 +269,5 @@ export function serializeNode({ h, node, index, childWidgets, callbacks, parentI
         ),
     },
     childWidgets,
-  }
+  };
 }

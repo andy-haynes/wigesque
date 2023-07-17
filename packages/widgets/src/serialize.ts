@@ -11,6 +11,7 @@ import type {
 export function serializeProps({ callbacks, h, parentId, props, widgetId }: SerializePropsOptions): Props {
   return Object.entries(props)
     .reduce((newProps, [key, value]: [string, any]) => {
+      // TODO better preact component check
       const isComponent = value?.props && ('__' in value && '__k' in value);
       const isFunction = typeof value === 'function';
 
@@ -170,9 +171,8 @@ export function serializeNode({ h, node, index, childWidgets, callbacks, parentI
       children: 'IpfsImageUpload',
     },
     Markdown: ({ children, props } : { children: any[], props?: { text: string } }) => h('div', props,  [props?.text, ...children]),
-    OverlayTrigger: {
-      type: 'div',
-      children: 'OverlayTrigger',
+    OverlayTrigger: ({ children, props } : { children: any[], props?: { text: string } }) => {
+      return h('div', props, children);
     },
     Tooltip: {
       type: 'div',

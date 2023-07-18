@@ -38,8 +38,19 @@ function mountElement({ widgetId, element }: { widgetId: string, element: Widget
 export default function Web() {
   const [rootWidget, setRootWidget] = useState('');
   const [rootWidgetInput, setRootWidgetInput] = useState(DEFAULT_ROOT_WIDGET);
-  const [updates, setUpdates] = useState('');
   const [widgetCount, setWidgetCount] = useState(1);
+
+  const widgetProxy = new Proxy(widgets, {
+    get(target, key: string) {
+      return target[key];
+    },
+
+    set(target, key: string, value: any) {
+      target[key] = value;
+      setWidgetCount(widgetCount + 1);
+      return true;
+    },
+  });
 
   useEffect(() => {
     function buildMessageListener(eventType: string) {
@@ -68,11 +79,9 @@ export default function Web() {
                 data,
                 incrementUpdateMetrics: () => metrics.updates++,
                 mountElement,
-                setWidgetCount,
                 widgetSourceBaseUrl: LOCAL_PROXY_WIDGET_URL_PREFIX,
-                widgets,
+                widgets: widgetProxy,
               });
-              setUpdates(updates + widgetId);
               break;
             }
             default:
@@ -133,7 +142,7 @@ export default function Web() {
           />
         </div>
         {
-          Object.entries(widgets)
+          Object.entries({ ...widgetProxy })
             .map(([widgetId, { props, sourceUrl }]) => (
               <div key={widgetId} widget-id={widgetId}>
                 <Widget

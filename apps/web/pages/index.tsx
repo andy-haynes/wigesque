@@ -11,12 +11,20 @@ const DEFAULT_ROOT_WIDGET = 'mob.near/widget/Welcome'
 const roots = {} as { [key: string]: ReactDOM.Root };
 const widgets = {} as { [key: string]: any };
 
-const metrics = { renders: 0, updates: 0, callbackInvocations: 0, callbackResponses: 0 };
+const metrics = { renders: 0, updates: 0, callbackInvocations: 0, callbackResponses: 0, missingWidgets: {} };
 
 function mountElement({ widgetId, element }: { widgetId: string, element: WidgetDOMElement }) {
   if (!roots[widgetId]) {
     const domElement = document.getElementById(getAppDomId(widgetId));
     if (!domElement) {
+      const metricKey = widgetId.split('##')[0];
+      // @ts-expect-error
+      if (!metrics.missingWidgets[metricKey]) {
+        // @ts-expect-error
+        metrics.missingWidgets[metricKey] = 0;
+      }
+      // @ts-expect-error
+      metrics.missingWidgets[metricKey]++;
       console.error(`Node not found: #${getAppDomId(widgetId)}`);
       return;
     }
@@ -111,6 +119,8 @@ export default function Web() {
       <h6>{metrics.updates} updates</h6>
       <h6>{metrics.callbackInvocations} invocations</h6>
       <h6>{metrics.callbackResponses} responses</h6>
+      <h6>missing widgets</h6>
+      {Object.entries(metrics.missingWidgets).map(([widget, count]) => (<div key={widget}>{widget}: {count}</div>))}
       <div id={getAppDomId(rootWidget)} className='iframe'>
         root widget goes here
       </div>

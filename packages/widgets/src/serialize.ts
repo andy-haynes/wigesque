@@ -1,11 +1,17 @@
 import type {
   DeserializePropsOptions,
+  FilesProps,
+  InfiniteScrollProps,
+  IpfsImageUploadProps,
+  MarkdownProps,
+  OverlayTriggerProps,
   Props,
   SerializeArgsOptions,
   SerializeNodeOptions,
   SerializePropsOptions,
   SerializedArgs,
   SerializedNode,
+  TypeaheadProps,
 } from './types';
 
 export function serializeProps({ callbacks, h, parentId, props, widgetId }: SerializePropsOptions): Props {
@@ -135,52 +141,47 @@ export function deserializeProps({
   };
 }
 
-export function serializeNode({ h, node, index, childWidgets, callbacks, parentId }: SerializeNodeOptions): SerializedNode {
+export function serializeNode({ h, node, index, childWidgets, callbacks, parentId, rootWidgetId = '' }: SerializeNodeOptions): SerializedNode {
+  if (!rootWidgetId) {
+    rootWidgetId = parentId;
+  }
 // TODO implement these for real
   const BUILTIN_COMPONENTS = {
-    Checkbox: {
-      type: 'div',
-      children: 'Checkbox',
+    Checkbox: ({ children, props } : { children: any[], props?: object }) => {
+      return h('div', props,  children);
     },
-    CommitButton: {
-      type: 'button',
-      children: 'CommitButton',
+    CommitButton: ({ children, props } : { children: any[], props?: object }) => {
+      return h('div', props,  children);
     },
-    Dialog: {
-      type: 'div',
-      children: 'Dialog',
+    Dialog: ({ children, props } : { children: any[], props?: object }) => {
+      return h('div', props,  children);
     },
-    DropdownMenu: {
-      type: 'div',
-      children: 'DropdownMenu',
+    DropdownMenu: ({ children, props } : { children: any[], props?: object }) => {
+      return h('div', props,  children);
     },
-    Files: {
-      type: 'div',
-      children: 'Files',
+    Files: ({ children, props } : { children: any[], props?: FilesProps }) => {
+      return h('div', props,  children);
     },
-    Fragment: {
-      type: 'div',
-      children: 'Fragment',
+    Fragment: ({ children, props } : { children: any[], props?: object }) => {
+      return h('div', props,  children);
     },
-    InfiniteScroll: {
-      type: 'div',
-      children: 'InfiniteScroll',
+    InfiniteScroll: ({ children, props } : { children: any[], props?: InfiniteScrollProps }) => {
+      return h('div', props,  children);
     },
-    IpfsImageUpload: {
-      type: 'button',
-      children: 'IpfsImageUpload',
+    IpfsImageUpload: ({ children, props } : { children: any[], props?: IpfsImageUploadProps }) => {
+      return h('div', props,  children);
     },
-    Markdown: ({ children, props } : { children: any[], props?: { text: string } }) => h('div', props,  [props?.text, ...children]),
-    OverlayTrigger: ({ children, props } : { children: any[], props?: { text: string } }) => {
+    Markdown: ({ children, props } : { children: any[], props?: MarkdownProps }) => {
+      return h('div', props,  [props?.text, ...children]);
+    },
+    OverlayTrigger: ({ children, props } : { children: any[], props?: OverlayTriggerProps }) => {
       return h('div', props, children);
     },
-    Tooltip: {
-      type: 'div',
-      children: 'Tooltip',
+    Tooltip: ({ children, props } : { children: any[], props?: object }) => {
+      return h('div', props,  children);
     },
-    Typeahead: {
-      type: 'div',
-      children: 'Typeahead',
+    Typeahead: ({ children, props } : { children: any[], props?: TypeaheadProps }) => {
+      return h('div', props,  children);
     },
   };
 
@@ -209,18 +210,14 @@ export function serializeNode({ h, node, index, childWidgets, callbacks, parentI
     } else if (BUILTIN_COMPONENTS[component]) {
       // @ts-expect-error
       const builtin = BUILTIN_COMPONENTS[component];
-      if (typeof builtin === 'function') {
-        ({
-          props,
-          type,
-        } = builtin({
-          children: unifiedChildren,
-          props,
-        }));
-        unifiedChildren = props.children;
-      } else {
-        type = builtin.type;
-      }
+      ({
+        props,
+        type,
+      } = builtin({
+        children: unifiedChildren,
+        props,
+      }));
+      unifiedChildren = props.children;
     } else if (component === 'Widget') {
       const { src, props: widgetProps } = props;
 

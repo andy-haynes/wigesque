@@ -247,3 +247,43 @@ export interface WidgetProps {
   className: string;
   id: string;
 }
+
+// builtin component props
+export interface FilesProps {
+  accepts: string[];
+  className: string;
+  clickable: boolean;
+  minFileSize: number;
+  multiple: boolean;
+  onChange: (files: any[]) => {};
+}
+
+export interface IpfsImageUploadProps {
+  img: string;
+}
+
+export interface InfiniteScrollProps {
+  pageStart: number;
+  loadMore: () => {};
+  hasMore: boolean;
+  loader: any; // Component
+}
+
+export interface MarkdownProps {
+  text: string;
+}
+
+export interface OverlayTriggerProps {
+  delay: { hide: number; show: number };
+  overlay: any;
+  placement: string;
+  show: boolean;
+  trigger: string[];
+}
+
+export interface TypeaheadProps {
+  multiple: boolean;
+  onChange: (value: any) => {};
+  options: string[];
+  placeholder: string;
+}

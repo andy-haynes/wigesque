@@ -270,7 +270,7 @@ export function SandboxedIframe({ id, scriptSrc, widgetProps }: { id: string, sc
             csp={[
                 "default-src 'self'",
                 "connect-src *",
-                "img-src *",
+                "img-src * data:",
                 "script-src 'unsafe-inline' 'unsafe-eval'",
                 "script-src-elem https://cdnjs.cloudflare.com https://cdn.jsdelivr.net http://localhost http://localhost:3001 'unsafe-inline'",
                 '',

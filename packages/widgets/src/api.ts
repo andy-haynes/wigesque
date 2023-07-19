@@ -22,16 +22,36 @@ export function initNear({ cache, renderWidget, rpcUrl }: InitNearOptions): any 
         .catch(console.error);
     },
     call(contractName: string, methodName: string, args: string, gas: string, deposit: number) {},
-    view(contractName: string, methodName: string, args: string, blockId: string | number | object, subscribe: any) {},
+    view(contractName: string, methodName: string, args: string, blockId: string | number | object, subscribe: any) {
+      const cacheKey = JSON.stringify({ contractName, methodName, args, blockId: 'final', subscribe, type: 'view' });
+      if (cache[cacheKey]) {
+        return cache[cacheKey];
+      }
+
+      this.asyncView(contractName, methodName, args, 'final', subscribe)
+        .then((res: any) => {
+          cache[cacheKey] = res;
+          renderWidget();
+        })
+        .catch((e: Error) => console.error(e, { contractName, methodName, args, blockId, subscribe }));
+    },
     asyncView(contractName: string, methodName: string, args: string, blockId: string | number | object, subscribe: any) {
+      const cacheKey = JSON.stringify({ contractName, methodName, args, blockId, subscribe, type: 'view' });
+      if (cache[cacheKey]) {
+        return cache[cacheKey];
+      }
       return provider.query({
         request_type: 'call_function',
         finality: blockId,
         account_id: contractName,
         method_name: methodName,
-        /* @ts-expect-error */
-        args_base64: JSON.stringify(args).toString('base64')
-      });
+        args_base64: btoa(Array.from(new TextEncoder().encode(JSON.stringify(args)), (byte) => String.fromCodePoint(byte)).join('')),
+      })
+        .then(({ result }: { result: Uint8Array }) => {
+          const deserialized = JSON.parse(new TextDecoder().decode(Uint8Array.from(result)));
+          cache[cacheKey] = deserialized;
+          return deserialized;
+        })
     },
   };
 }

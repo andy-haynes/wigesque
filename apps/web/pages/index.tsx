@@ -2,6 +2,7 @@ import { getAppDomId, Widget } from "widgets";
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 
+import { WidgetActivityMonitor, WidgetMonitor, WidgetUpdate } from './monitor';
 import { WidgetDOMElement } from './widget-utils';
 import { onCallbackInvocation, onCallbackResponse, onRender } from "./widget-handlers";
 
@@ -11,20 +12,14 @@ const DEFAULT_ROOT_WIDGET = 'mob.near/widget/Welcome'
 const roots = {} as { [key: string]: ReactDOM.Root };
 const widgets = {} as { [key: string]: any };
 
-const metrics = { renders: 0, updates: 0, callbackInvocations: 0, callbackResponses: 0, missingWidgets: {} };
+const monitor = new WidgetActivityMonitor();
 
 function mountElement({ widgetId, element }: { widgetId: string, element: WidgetDOMElement }) {
   if (!roots[widgetId]) {
     const domElement = document.getElementById(getAppDomId(widgetId));
     if (!domElement) {
       const metricKey = widgetId.split('##')[0];
-      // @ts-expect-error
-      if (!metrics.missingWidgets[metricKey]) {
-        // @ts-expect-error
-        metrics.missingWidgets[metricKey] = 0;
-      }
-      // @ts-expect-error
-      metrics.missingWidgets[metricKey]++;
+      monitor.missingWidgetReferenced(metricKey);
       console.error(`Node not found: #${getAppDomId(widgetId)}`);
       return;
     }
@@ -39,6 +34,7 @@ export default function Web() {
   const [rootWidget, setRootWidget] = useState('');
   const [rootWidgetInput, setRootWidgetInput] = useState(DEFAULT_ROOT_WIDGET);
   const [widgetCount, setWidgetCount] = useState(1);
+  const [widgetUpdates, setWidgetUpdates] = useState('');
 
   const widgetProxy = new Proxy(widgets, {
     get(target, key: string) {
@@ -47,7 +43,11 @@ export default function Web() {
 
     set(target, key: string, value: any) {
       target[key] = value;
-      setWidgetCount(widgetCount + 1);
+      monitor.widgetAdded({
+        ...value,
+        sourceUrl: value.sourceUrl.replace(`${LOCAL_PROXY_WIDGET_URL_PREFIX}/`, ''),
+      });
+      setWidgetUpdates(widgetUpdates + key);
       return true;
     },
   });
@@ -63,21 +63,20 @@ export default function Web() {
           const { data } = event;
           switch (eventType) {
             case 'widget.callbackInvocation': {
-              metrics.callbackInvocations++;
+              monitor.widgetCallbackInvoked(data);
               onCallbackInvocation({ data });
               break;
             }
             case 'widget.callbackResponse': {
-              metrics.callbackResponses++;
+              monitor.widgetCallbackReturned(data);
               onCallbackResponse({ data });
               break;
             }
             case 'widget.render': {
-              const { widgetId } = data;
-              metrics.renders++;
+              monitor.widgetRendered(data);
               onRender({
                 data,
-                incrementUpdateMetrics: () => metrics.updates++,
+                markWidgetUpdated: (update: WidgetUpdate) => monitor.widgetUpdated(update),
                 mountElement,
                 widgetSourceBaseUrl: LOCAL_PROXY_WIDGET_URL_PREFIX,
                 widgets: widgetProxy,
@@ -123,13 +122,7 @@ export default function Web() {
 
   return (
     <div className='App'>
-      <h6>{widgetCount} widgets rendered</h6>
-      <h6>{metrics.renders} renders</h6>
-      <h6>{metrics.updates} updates</h6>
-      <h6>{metrics.callbackInvocations} invocations</h6>
-      <h6>{metrics.callbackResponses} responses</h6>
-      <h6>missing widgets</h6>
-      {Object.entries(metrics.missingWidgets).map(([widget, count]) => (<div key={widget}>{widget}: {count}</div>))}
+      <WidgetMonitor monitor={monitor} />
       <div id={getAppDomId(rootWidget)} className='iframe'>
         root widget goes here
       </div>

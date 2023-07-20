@@ -5,6 +5,7 @@ import {
   RenderEventData,
 } from 'widgets';
 
+import type { WidgetUpdate } from './monitor';
 import { createChildElements, createElement, postMessageToChildIframe } from './widget-utils';
 
 interface CallbackInvocationHandlerOptions {
@@ -17,7 +18,7 @@ interface CallbackResponseHandlerOptions {
 
 interface RenderHandlerOptions {
   data: RenderEventData;
-  incrementUpdateMetrics: () => void;
+  markWidgetUpdated: (update: WidgetUpdate) => void;
   mountElement: ({ widgetId, element }: { widgetId: string, element: any }) => void;
   widgetSourceBaseUrl: string;
   widgets: { [key: string]: any };
@@ -68,7 +69,7 @@ export function onCallbackResponse({
 
 export function onRender({
   data,
-  incrementUpdateMetrics,
+  markWidgetUpdated,
   mountElement,
   widgetSourceBaseUrl,
   widgets,
@@ -105,7 +106,7 @@ export function onRender({
       };
     } else {
       /* widget iframe is already loaded, post update message to iframe */
-      incrementUpdateMetrics();
+      markWidgetUpdated({ props, widgetId });
       postMessageToChildIframe({
         id: widgetId,
         message: {

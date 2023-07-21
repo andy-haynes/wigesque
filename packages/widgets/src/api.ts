@@ -14,7 +14,8 @@ export function initNear({ cache, renderWidget, rpcUrl }: InitNearOptions): any 
         setTimeout(() => delete cache[cacheKey], 5000);
         return block;
       }
-      provider.block({ finality: blockHeightOrFinality })
+      // TODO parameterize correctly
+      provider.block({ finality: 'final' })
         .then((block: any) => {
           cache[cacheKey] = block;
           renderWidget();

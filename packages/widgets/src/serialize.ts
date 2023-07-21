@@ -221,14 +221,20 @@ export function serializeNode({ h, node, index, childWidgets, callbacks, parentI
     } else if (component === 'Widget') {
       const { src, props: widgetProps } = props;
 
+      const serializedProps = JSON.stringify(widgetProps || {}).replace(/[{}\[\]'", ]/g, '');
+      const sampleInterval = Math.floor(serializedProps.length / 2048) || 1;
+      const sampledProps = serializedProps
+        .split('')
+        .reduce((sampled, c, i) => i % sampleInterval === 0 ? sampled + c : sampled, '');
+
       const base64Props = btoa(
         Array.from(
-          (new TextEncoder()).encode(JSON.stringify(widgetProps || {})),
+          new TextEncoder().encode(sampledProps),
           (byte) => String.fromCodePoint(byte)
         ).join('')
       );
 
-      const widgetId = [src, base64Props.slice(0, 1024)].join('##');
+      const widgetId = [src, base64Props, parentId].join('##');
       try {
         childWidgets.push({
           props: widgetProps ? serializeProps({ props: widgetProps, callbacks, h, parentId, widgetId }) : {},

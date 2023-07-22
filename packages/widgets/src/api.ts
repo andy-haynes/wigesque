@@ -1,9 +1,11 @@
 import type {
   InitNearOptions,
   InitSocialOptions,
+  KeyValuePair,
 } from './types';
 
-export function initNear({ cache, renderWidget, rpcUrl }: InitNearOptions): any {
+export function initNear({ renderWidget, rpcUrl }: InitNearOptions): any {
+  const cache: KeyValuePair = {};
   /* @ts-expect-error */
   const provider = new window.nearApi.providers.JsonRpcProvider(rpcUrl);
   return {
@@ -70,7 +72,9 @@ interface SocialQueryOptions {
   keys?: string | string[];
 }
 
-export function initSocial({ cache, endpointBaseUrl, renderWidget, widgetId }: InitSocialOptions) {
+export function initSocial({ endpointBaseUrl, renderWidget, widgetId }: InitSocialOptions) {
+  const cache: KeyValuePair = {};
+
   function cachedQuery({ apiEndpoint, body, cacheKey }: { apiEndpoint: string, body: SocialQueryOptions, cacheKey: string }) {
     const cached = cache[cacheKey];
     if (cached || (cacheKey in cache && cached === undefined)) {

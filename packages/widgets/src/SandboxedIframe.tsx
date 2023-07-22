@@ -135,16 +135,12 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
               .catch(console.error);
           }
 
-          const rpcCache = {};
           const Near = (${initNear.toString()})({
-            cache: rpcCache,
             renderWidget,
             rpcUrl: 'https://rpc.near.org',
           });
 
-          const socialCache = {}; 
           const Social = (${initSocial.toString()})({
-            cache: rpcCache,
             endpointBaseUrl: 'https://api.near.social',
             renderWidget,
             widgetId: '${id}',

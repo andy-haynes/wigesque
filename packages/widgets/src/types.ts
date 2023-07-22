@@ -73,13 +73,11 @@ type WidgetUpdate = 'widget.update';
 export type EventType = WidgetCallbackInvocation | WidgetCallbackResponse | WidgetRender | WidgetUpdate;
 
 export interface InitNearOptions {
-  cache: KeyValuePair;
   renderWidget: () => void;
   rpcUrl: string;
 }
 
 export interface InitSocialOptions {
-  cache: KeyValuePair;
   endpointBaseUrl: string;
   renderWidget: Function;
   widgetId: string;

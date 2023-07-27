@@ -1,25 +1,19 @@
 import {
   initNear,
   initSocial,
-} from './api';
-import {
   buildEventHandler,
   invokeCallback,
   invokeWidgetCallback,
-} from './events';
-import {
   buildRequest,
   postMessage,
   postCallbackInvocationMessage,
   postCallbackResponseMessage,
   postWidgetRenderMessage,
-} from './messaging';
-import {
   deserializeProps,
   serializeArgs,
   serializeNode,
   serializeProps,
-} from './serialize';
+} from 'container';
 
 const NEWLINE_ESCAPE_CHAR = '⁣';
 

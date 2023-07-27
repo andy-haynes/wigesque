@@ -1,14 +1,11 @@
 {
-  "name": "widgets",
+  "name": "container",
   "version": "1.0.0",
   "description": "",
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc -p ./tsconfig.json",
     "dev": "tsc -w -p ./tsconfig.json"
-  },
-  "dependencies": {
-    "container": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^17.0.12",

@@ -1,7 +1,7 @@
+import type { EventData } from "container";
 import React from "react";
 import type { DOMElement } from "react";
 import {
-  EventData,
   getIframeId,
 } from "widgets";
 

@@ -1,17 +1,15 @@
 import type {
   CallbackRequest,
-  PostMessageWidgetCallbackInvocationOptions,
-  PostMessageWidgetCallbackInvocation,
-  PostMessageWidgetCallbackResponse,
-} from "./types";
-import {
   PostMessageOptions,
+  PostMessageWidgetCallbackInvocation,
+  PostMessageWidgetCallbackInvocationOptions,
+  PostMessageWidgetCallbackResponse,
   PostMessageWidgetCallbackResponseOptions,
   PostMessageWidgetRender,
   PostMessageWidgetRenderOptions,
   PostMessageWidgetUpdate,
   PostMessageWidgetUpdateOptions,
-} from "./types";
+} from './types';
 
 export function buildRequest(): CallbackRequest {
   let resolver;

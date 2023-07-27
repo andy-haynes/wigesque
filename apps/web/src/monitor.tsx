@@ -2,7 +2,7 @@ import type {
   PostMessageWidgetCallbackInvocation,
   PostMessageWidgetCallbackResponse,
   PostMessageWidgetRender,
-} from 'widgets';
+} from 'container';
 import React from 'react';
 
 export interface DomCallback {

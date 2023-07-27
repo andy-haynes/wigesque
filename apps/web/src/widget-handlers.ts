@@ -3,7 +3,7 @@ import {
   CallbackInvocationEventData,
   CallbackResponseEventData,
   RenderEventData,
-} from 'widgets';
+} from 'container';
 
 import type { WidgetUpdate } from './monitor';
 import { createChildElements, createElement, postMessageToChildIframe } from './widget-utils';

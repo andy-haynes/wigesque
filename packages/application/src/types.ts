@@ -3,7 +3,7 @@ import type {
   CallbackResponseEventData,
   EventData,
   RenderEventData,
-} from 'container';
+} from '@bos-web-engine-viewer/container';
 import type { DOMElement } from 'react';
 
 export interface DomCallback {

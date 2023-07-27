@@ -1,4 +1,4 @@
-import { getAppDomId, Widget } from "widgets";
+import { getAppDomId, Widget } from "@bos-web-engine-viewer/widgets";
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import {
@@ -9,7 +9,7 @@ import {
   onCallbackInvocation,
   onCallbackResponse,
   onRender,
-} from "application";
+} from "@bos-web-engine-viewer/application";
 
 const LOCAL_PROXY_WIDGET_URL_PREFIX = 'http://localhost:3001/widget';
 const DEFAULT_ROOT_WIDGET = 'andyh.near/widget/MainPage'

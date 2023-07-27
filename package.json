@@ -1,5 +1,5 @@
 {
-  "name": "widgesque",
+  "name": "@bos-web-engine-viewer/monorepo",
   "version": "0.0.0",
   "private": true,
   "workspaces": [

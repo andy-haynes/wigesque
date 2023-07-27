@@ -1,5 +1,5 @@
 {
-  "name": "container",
+  "name": "@bos-web-engine-viewer/container",
   "version": "1.0.0",
   "description": "",
   "main": "lib/index.js",

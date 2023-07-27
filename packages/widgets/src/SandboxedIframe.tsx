@@ -13,7 +13,7 @@ import {
   serializeArgs,
   serializeNode,
   serializeProps,
-} from 'container';
+} from '@bos-web-engine-viewer/container';
 
 const NEWLINE_ESCAPE_CHAR = '⁣';
 

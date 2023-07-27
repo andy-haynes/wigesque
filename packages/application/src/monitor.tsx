@@ -2,7 +2,7 @@ import type {
   PostMessageWidgetCallbackInvocation,
   PostMessageWidgetCallbackResponse,
   PostMessageWidgetRender,
-} from 'container';
+} from '@bos-web-engine-viewer/container';
 import React from 'react';
 
 import type {

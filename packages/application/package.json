@@ -1,5 +1,5 @@
 {
-  "name": "application",
+  "name": "@bos-web-engine-viewer/application",
   "version": "1.0.0",
   "description": "",
   "main": "lib/index.js",
@@ -8,10 +8,10 @@
     "dev": "tsc -w -p ./tsconfig.json"
   },
   "dependencies": {
-    "widgets": "workspace:*"
+    "@bos-web-engine-viewer/widgets": "workspace:*"
   },
   "devDependencies": {
-    "container": "workspace:*",
+    "@bos-web-engine-viewer/container": "workspace:*",
     "@types/node": "^17.0.12",
     "@types/react": "^18.0.17",
     "@types/react-dom": "^18.0.6",

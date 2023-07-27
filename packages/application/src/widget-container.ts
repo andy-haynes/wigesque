@@ -1,4 +1,4 @@
-import { getIframeId } from "widgets";
+import { getIframeId } from "@bos-web-engine-viewer/widgets";
 
 import type {
   DeserializePropsOptions,

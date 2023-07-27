@@ -15,14 +15,14 @@ importers:
   apps/web:
     specifiers:
       '@babel/core': ^7.0.0
+      '@bos-web-engine-viewer/application': workspace:*
+      '@bos-web-engine-viewer/widgets': workspace:*
       '@types/node': ^17.0.12
       '@types/react': ^18.0.22
       '@types/react-dom': ^18.0.7
       '@types/uuid': ^9.0.1
-      application: workspace:*
       bootstrap: ^5.3.0
       bootstrap-icons: ^1.10.5
-      container: workspace:*
       eslint: 7.32.0
       eslint-config-custom: workspace:*
       next: ^13.1.1
@@ -31,15 +31,13 @@ importers:
       tsconfig: workspace:*
       typescript: ^4.5.3
       uuid: ^9.0.0
-      widgets: workspace:*
     dependencies:
-      application: link:../../packages/application
-      container: link:../../packages/container
+      '@bos-web-engine-viewer/application': link:../../packages/application
+      '@bos-web-engine-viewer/widgets': link:../../packages/widgets
       next: 13.2.4_z72xxk7vwlamvgqemvc4ptm4du
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       uuid: 9.0.0
-      widgets: link:../../packages/widgets
     devDependencies:
       '@babel/core': 7.21.4
       '@types/node': 17.0.45
@@ -55,23 +53,23 @@ importers:
 
   packages/application:
     specifiers:
+      '@bos-web-engine-viewer/container': workspace:*
+      '@bos-web-engine-viewer/widgets': workspace:*
       '@types/node': ^17.0.12
       '@types/react': ^18.0.17
       '@types/react-dom': ^18.0.6
-      container: workspace:*
       eslint: ^7.32.0
       eslint-config-custom: workspace:*
       react: ^18.2.0
       tsconfig: workspace:*
       typescript: ^4.5.2
-      widgets: workspace:*
     dependencies:
-      widgets: link:../widgets
+      '@bos-web-engine-viewer/widgets': link:../widgets
     devDependencies:
+      '@bos-web-engine-viewer/container': link:../container
       '@types/node': 17.0.45
       '@types/react': 18.0.33
       '@types/react-dom': 18.0.11
-      container: link:../container
       eslint: 7.32.0
       eslint-config-custom: link:../eslint-config-custom
       react: 18.2.0
@@ -185,17 +183,17 @@ importers:
 
   packages/widgets:
     specifiers:
+      '@bos-web-engine-viewer/container': workspace:*
       '@types/node': ^17.0.12
       '@types/react': ^18.0.17
       '@types/react-dom': ^18.0.6
-      container: workspace:*
       eslint: ^7.32.0
       eslint-config-custom: workspace:*
       react: ^18.2.0
       tsconfig: workspace:*
       typescript: ^4.5.2
     dependencies:
-      container: link:../container
+      '@bos-web-engine-viewer/container': link:../container
     devDependencies:
       '@types/node': 17.0.45
       '@types/react': 18.0.33

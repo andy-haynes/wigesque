@@ -141,10 +141,7 @@ export function deserializeProps({
   };
 }
 
-export function serializeNode({ h, node, index, childWidgets, callbacks, parentId, rootWidgetId = '' }: SerializeNodeOptions): SerializedNode {
-  if (!rootWidgetId) {
-    rootWidgetId = parentId;
-  }
+export function serializeNode({ h, node, index, childWidgets, callbacks, parentId }: SerializeNodeOptions): SerializedNode {
 // TODO implement these for real
   const BUILTIN_COMPONENTS = {
     Checkbox: ({ children, props } : { children: any[], props?: object }) => {

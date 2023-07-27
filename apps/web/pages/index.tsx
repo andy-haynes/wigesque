@@ -7,7 +7,7 @@ import { WidgetDOMElement } from '../src/widget-utils';
 import { onCallbackInvocation, onCallbackResponse, onRender } from "../src/widget-handlers";
 
 const LOCAL_PROXY_WIDGET_URL_PREFIX = 'http://localhost:3001/widget';
-const DEFAULT_ROOT_WIDGET = 'mob.near/widget/Welcome'
+const DEFAULT_ROOT_WIDGET = 'andyh.near/widget/MainPage'
 
 const roots = {} as { [key: string]: ReactDOM.Root };
 const widgets = {} as { [key: string]: any };

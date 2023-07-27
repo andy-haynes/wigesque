@@ -63,45 +63,26 @@ export class WidgetActivityMonitor {
 }
 
 export function WidgetMonitor({ monitor }: { monitor: WidgetActivityMonitor }) {
+  const dataPoints = [
+    { label: 'widgets loaded', value: monitor.widgets.length },
+    { label: 'renders', value: monitor.renders.length },
+    { label: 'updates', value: monitor.updates.length },
+    { label: 'invocations', value: monitor.callbacks.invocations.length },
+    { label: 'responses', value: monitor.callbacks.responses.length },
+    { label: 'missing widgets', value: monitor.missingWidgets.length },
+  ];
+
   return (
     <div id='widget-monitor'>
       <div className='metrics'>
-        <div className='metrics-data-point'>
-          <div className='data-point-header'>widgets loaded</div>
-          <div className='data-point-value'>
-            {monitor.widgets.length}
-          </div>
-        </div>
-        <div className='metrics-data-point'>
-          <div className='data-point-header'>renders</div>
-          <div className='data-point-value'>
-            {monitor.renders.length}
-          </div>
-        </div>
-        <div className='metrics-data-point'>
-          <div className='data-point-header'>updates</div>
-          <div className='data-point-value'>
-            {monitor.updates.length}
-          </div>
-        </div>
-        <div className='metrics-data-point'>
-          <div className='data-point-header'>invocations</div>
-          <div className='data-point-value'>
-            {monitor.callbacks.invocations.length}
-          </div>
-        </div>
-        <div className='metrics-data-point'>
-          <div className='data-point-header'>responses</div>
-          <div className='data-point-value'>
-            {monitor.callbacks.responses.length}
-          </div>
-        </div>
-        <div className='metrics-data-point'>
-          <div className='data-point-header'>widgets missing</div>
-          <div className='data-point-value'>
-            {monitor.missingWidgets.length}
-          </div>
-        </div>
+        {dataPoints.map(({ label, value }, i) => (
+            <div className='metrics-data-point' key={`data-point-${i}`}>
+              <div className='data-point-header'>widgets loaded</div>
+              <div className='data-point-value'>
+                {monitor.widgets.length}
+              </div>
+            </div>
+        ))}
       </div>
       <div className='widgets'>
         {
@@ -115,8 +96,8 @@ export function WidgetMonitor({ monitor }: { monitor: WidgetActivityMonitor }) {
             return widgetsBySource;
           }, {} as { [key: string]: Widget[] }))
               .sort(([, aWidgets], [, bWidgets]) => bWidgets.length - aWidgets.length)
-              .map(([source, widgets]) => (
-                  <div className='widget-row'>
+              .map(([source, widgets], i) => (
+                  <div className='widget-row' key={`widget-row-${i}`}>
                     {widgets.length} {source}
                   </div>
               ))

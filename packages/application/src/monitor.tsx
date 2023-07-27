@@ -5,22 +5,11 @@ import type {
 } from 'container';
 import React from 'react';
 
-export interface DomCallback {
-  args: { event: any };
-  method: string;
-  type: string;
-}
-
-export interface WidgetUpdate {
-  props: any;
-  widgetId: string;
-}
-
-export interface Widget {
-  parentId: string;
-  props: any;
-  sourceUrl: string;
-}
+import type {
+  DomCallback,
+  Widget,
+  WidgetUpdate,
+} from './types';
 
 export class WidgetActivityMonitor {
   callbacks: {
@@ -77,9 +66,9 @@ export function WidgetMonitor({ monitor }: { monitor: WidgetActivityMonitor }) {
       <div className='metrics'>
         {dataPoints.map(({ label, value }, i) => (
             <div className='metrics-data-point' key={`data-point-${i}`}>
-              <div className='data-point-header'>widgets loaded</div>
+              <div className='data-point-header'>{label}</div>
               <div className='data-point-value'>
-                {monitor.widgets.length}
+                {value}
               </div>
             </div>
         ))}

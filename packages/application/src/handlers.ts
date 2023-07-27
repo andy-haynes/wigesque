@@ -1,28 +1,12 @@
 import React from "react";
-import {
-  CallbackInvocationEventData,
-  CallbackResponseEventData,
-  RenderEventData,
-} from 'container';
 
-import type { WidgetUpdate } from './monitor';
-import { createChildElements, createElement, postMessageToChildIframe } from './widget-utils';
-
-interface CallbackInvocationHandlerOptions {
-  data: CallbackInvocationEventData;
-}
-
-interface CallbackResponseHandlerOptions {
-  data: CallbackResponseEventData;
-}
-
-interface RenderHandlerOptions {
-  data: RenderEventData;
-  markWidgetUpdated: (update: WidgetUpdate) => void;
-  mountElement: ({ widgetId, element }: { widgetId: string, element: any }) => void;
-  widgetSourceBaseUrl: string;
-  widgets: { [key: string]: any };
-}
+import type {
+  CallbackInvocationHandlerOptions,
+  CallbackResponseHandlerOptions,
+  RenderHandlerOptions,
+} from './types';
+import { createChildElements, createElement } from './react';
+import { postMessageToChildIframe } from './widget-container';
 
 export function onCallbackInvocation({
   data,

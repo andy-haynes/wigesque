@@ -1,10 +1,15 @@
 import { getAppDomId, Widget } from "widgets";
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
-
-import { WidgetActivityMonitor, WidgetMonitor, WidgetUpdate } from '../src/monitor';
-import { WidgetDOMElement } from '../src/widget-utils';
-import { onCallbackInvocation, onCallbackResponse, onRender } from "../src/widget-handlers";
+import {
+  WidgetActivityMonitor,
+  WidgetMonitor,
+  WidgetUpdate,
+  WidgetDOMElement,
+  onCallbackInvocation,
+  onCallbackResponse,
+  onRender,
+} from "application";
 
 const LOCAL_PROXY_WIDGET_URL_PREFIX = 'http://localhost:3001/widget';
 const DEFAULT_ROOT_WIDGET = 'andyh.near/widget/MainPage'

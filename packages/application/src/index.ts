@@ -1,18 +1,18 @@
 export {
-    onCallbackInvocation,
-    onCallbackResponse,
-    onRender,
+  onCallbackInvocation,
+  onCallbackResponse,
+  onRender,
 } from './handlers';
 export {
-    WidgetMonitor,
-    WidgetActivityMonitor,
+  WidgetMonitor,
+  WidgetActivityMonitor,
 } from './monitor';
 export {
-    createChildElements,
-    createElement,
+  createChildElements,
+  createElement,
 } from './react';
 export * from './types';
 export {
-    deserializeProps,
-    postMessageToChildIframe,
+  deserializeProps,
+  postMessageToChildIframe,
 } from './widget-container';

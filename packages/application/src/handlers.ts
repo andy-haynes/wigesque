@@ -1,11 +1,11 @@
-import React from "react";
+import React from 'react';
 
+import { createChildElements, createElement } from './react';
 import type {
   CallbackInvocationHandlerOptions,
   CallbackResponseHandlerOptions,
   RenderHandlerOptions,
 } from './types';
-import { createChildElements, createElement } from './react';
 import { postMessageToChildIframe } from './widget-container';
 
 export function onCallbackInvocation({
@@ -101,7 +101,7 @@ export function onRender({
           type: 'widget.update',
         },
         targetOrigin: '*',
-      })
+      });
     }
   });
 }

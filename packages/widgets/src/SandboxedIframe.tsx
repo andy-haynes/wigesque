@@ -119,7 +119,7 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
             buildRequest,
             callbacks,
             postCallbackInvocationMessage,
-            props: JSON.parse('${jsonWidgetProps.replace(/'/g, "\\'").replace(/\\n/g, NEWLINE_ESCAPE_CHAR).replace(/\\"/g, '\\\\"')}'),
+            props: JSON.parse('${jsonWidgetProps.replace(/'/g, '\\\'').replace(/\\n/g, NEWLINE_ESCAPE_CHAR).replace(/\\"/g, '\\\\"')}'),
             requests,
             widgetId: '${id}',
           }));
@@ -252,25 +252,25 @@ function buildSandboxedWidget({ id, scriptSrc, widgetProps }: { id: string, scri
 }
 
 export function SandboxedIframe({ id, scriptSrc, widgetProps }: { id: string, scriptSrc: string, widgetProps?: any }) {
-    return (
-        <iframe
-            id={id}
-            className='sandboxed-iframe'
-            // @ts-expect-error: you're wrong about this one, TypeScript
-            csp={[
-                "default-src 'self'",
-                "connect-src *",
-                "img-src * data:",
-                "script-src 'unsafe-inline' 'unsafe-eval'",
-                "script-src-elem https://cdnjs.cloudflare.com https://cdn.jsdelivr.net http://localhost http://localhost:3001 'unsafe-inline'",
-                '',
-            ].join('; ')}
-            height={0}
-            sandbox='allow-scripts'
-            srcDoc={buildSandboxedWidget({ id: id.replace("iframe-", ""), scriptSrc, widgetProps })}
-            title='code-container'
-            width={0}
-            style={{ border: 'none' }}
-        />
-    );
+  return (
+    <iframe
+      id={id}
+      className='sandboxed-iframe'
+      // @ts-expect-error: you're wrong about this one, TypeScript
+      csp={[
+        'default-src \'self\'',
+        'connect-src *',
+        'img-src * data:',
+        'script-src \'unsafe-inline\' \'unsafe-eval\'',
+        'script-src-elem https://cdnjs.cloudflare.com https://cdn.jsdelivr.net http://localhost http://localhost:3001 \'unsafe-inline\'',
+        '',
+      ].join('; ')}
+      height={0}
+      sandbox='allow-scripts'
+      srcDoc={buildSandboxedWidget({ id: id.replace('iframe-', ''), scriptSrc, widgetProps })}
+      title='code-container'
+      width={0}
+      style={{ border: 'none' }}
+    />
+  );
 }

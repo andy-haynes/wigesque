@@ -33,7 +33,7 @@ export function serializeProps({ callbacks, h, parentId, props, widgetId }: Seri
             parentId,
           });
         } else if (typeof value === 'string') {
-          serializedValue = serializedValue.replace(/⁣/g, '\n')
+          serializedValue = serializedValue.replace(/⁣/g, '\n');
         }
 
         newProps[key] = serializedValue;
@@ -134,7 +134,7 @@ export function deserializeProps({
         });
 
         return requests[requestId].promise;
-      }
+      };
 
       return widgetCallbacks;
     }, {} as { [key: string]: any }),
@@ -258,13 +258,13 @@ export function serializeNode({ h, node, index, childWidgets, callbacks, parentI
       children: unifiedChildren
         .flat()
         .map((c, i) => c?.props ? serializeNode({
-            node: c,
-            h,
-            index: i,
-            childWidgets,
-            callbacks,
-            parentId,
-          }) : c
+          node: c,
+          h,
+          index: i,
+          childWidgets,
+          callbacks,
+          parentId,
+        }) : c
         ),
     },
     childWidgets,

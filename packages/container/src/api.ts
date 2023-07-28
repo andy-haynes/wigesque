@@ -54,7 +54,7 @@ export function initNear({ renderWidget, rpcUrl }: InitNearOptions): any {
           const deserialized = JSON.parse(new TextDecoder().decode(Uint8Array.from(result)));
           cache[cacheKey] = deserialized;
           return deserialized;
-        })
+        });
     },
   };
 }
@@ -164,6 +164,6 @@ export function initSocial({ endpointBaseUrl, renderWidget, widgetId }: InitSoci
         body: { keys: Array.isArray(patterns) ? patterns : [patterns] },
         cacheKey: JSON.stringify(patterns),
       });
-    }
+    },
   };
 }

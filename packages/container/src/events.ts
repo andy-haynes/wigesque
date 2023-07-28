@@ -4,8 +4,8 @@ import type {
   InvokeWidgetCallbackOptions,
   PostMessageEvent,
   ProcessEventOptions,
-  WidgetCallbackInvocationResult
-} from "./types";
+  WidgetCallbackInvocationResult,
+} from './types';
 
 /**
  * Execute the callback and return the value
@@ -136,94 +136,94 @@ export function buildEventHandler({
     }
 
     switch (event.data.type) {
-      case 'widget.callbackInvocation': {
-        let { args, method, originator, requestId } = event.data;
-        try {
-          ({ isComponent, result, shouldRender } = invokeCallback({ args, method }));
-        } catch (e: any) {
-          error = e as Error;
-        }
+        case 'widget.callbackInvocation': {
+          let { args, method, originator, requestId } = event.data;
+          try {
+            ({ isComponent, result, shouldRender } = invokeCallback({ args, method }));
+          } catch (e: any) {
+            error = e as Error;
+          }
 
-        if (requestId) {
-          postCallbackResponseMessage({
-            error,
-            isComponent,
-            requestId,
-            result,
-            targetId: originator,
-          });
-        }
-        break;
-      }
-      case 'widget.callbackResponse': {
-        const { isComponent, requestId, result } = event.data;
-        if (!(requestId in requests)) {
-          console.error(`No request found for request ${requestId}`);
-          return;
-        }
-
-        if (!result) {
-          console.error(`No response for request ${requestId}`);
-          return;
-        }
-
-        const { rejecter, resolver } = requests[requestId];
-        if (!rejecter || !resolver) {
-          console.error(`No resolver set for request ${requestId}`);
-          return;
-        }
-
-        let error: any;
-        let value: any;
-        try {
-          ({ error, value } = JSON.parse(result));
-        } catch (e) {
-          console.error('Could not parse returned JSON', { error: e, result });
-          return;
-        }
-
-        if (error) {
-          console.error('External Widget callback failed', { error });
-          // TODO reject w/ Error instance
-          rejecter(error);
-          return;
-        }
-
-        if (isComponent) {
-          resolver(renderDom(value));
+          if (requestId) {
+            postCallbackResponseMessage({
+              error,
+              isComponent,
+              requestId,
+              result,
+              targetId: originator,
+            });
+          }
           break;
         }
+        case 'widget.callbackResponse': {
+          const { isComponent, requestId, result } = event.data;
+          if (!(requestId in requests)) {
+            console.error(`No request found for request ${requestId}`);
+            return;
+          }
 
-        resolver(value);
-        break;
-      }
-      case 'widget.domCallback': {
-        let { args, method } = event.data;
-        try {
-          ({ isComponent, result, shouldRender } = invokeCallback({ args, method }));
-        } catch (e: any) {
-          error = e as Error;
+          if (!result) {
+            console.error(`No response for request ${requestId}`);
+            return;
+          }
+
+          const { rejecter, resolver } = requests[requestId];
+          if (!rejecter || !resolver) {
+            console.error(`No resolver set for request ${requestId}`);
+            return;
+          }
+
+          let error: any;
+          let value: any;
+          try {
+            ({ error, value } = JSON.parse(result));
+          } catch (e) {
+            console.error('Could not parse returned JSON', { error: e, result });
+            return;
+          }
+
+          if (error) {
+            console.error('External Widget callback failed', { error });
+            // TODO reject w/ Error instance
+            rejecter(error);
+            return;
+          }
+
+          if (isComponent) {
+            resolver(renderDom(value));
+            break;
+          }
+
+          resolver(value);
+          break;
         }
-        break;
-      }
-      case 'widget.update': {
-        shouldRender = setProps(deserializeProps({
-          buildRequest,
-          callbacks,
-          postCallbackInvocationMessage,
-          props: event.data.props,
-          requests,
-          widgetId,
-        }));
-        break;
-      }
-      default: {
-        return;
-      }
+        case 'widget.domCallback': {
+          let { args, method } = event.data;
+          try {
+            ({ isComponent, result, shouldRender } = invokeCallback({ args, method }));
+          } catch (e: any) {
+            error = e as Error;
+          }
+          break;
+        }
+        case 'widget.update': {
+          shouldRender = setProps(deserializeProps({
+            buildRequest,
+            callbacks,
+            postCallbackInvocationMessage,
+            props: event.data.props,
+            requests,
+            widgetId,
+          }));
+          break;
+        }
+        default: {
+          return;
+        }
     }
 
     if (shouldRender) {
       renderWidget();
     }
-  }
+  };
 }

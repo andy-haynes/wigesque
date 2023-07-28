@@ -1,4 +1,4 @@
-import { getIframeId } from "@bos-web-engine-viewer/widgets";
+import { getIframeId } from '@bos-web-engine-viewer/widgets';
 
 import type {
   DeserializePropsOptions,
@@ -27,7 +27,7 @@ export function deserializeProps({ id, props }: DeserializePropsOptions): any {
                 value: args[0].target?.value,
               },
             },
-          }
+          };
         }
 
         postMessageToChildIframe({
@@ -39,7 +39,7 @@ export function deserializeProps({ id, props }: DeserializePropsOptions): any {
           },
           targetOrigin: '*',
         });
-      }
+      };
     });
 
   delete props.__domcallbacks;

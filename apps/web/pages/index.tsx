@@ -1,6 +1,3 @@
-import { getAppDomId, Widget } from "@bos-web-engine-viewer/widgets";
-import React, { useEffect, useState } from "react";
-import ReactDOM from "react-dom/client";
 import {
   WidgetActivityMonitor,
   WidgetMonitor,
@@ -9,10 +6,13 @@ import {
   onCallbackInvocation,
   onCallbackResponse,
   onRender,
-} from "@bos-web-engine-viewer/application";
+} from '@bos-web-engine-viewer/application';
+import { getAppDomId, Widget } from '@bos-web-engine-viewer/widgets';
+import React, { useEffect, useState } from 'react';
+import ReactDOM from 'react-dom/client';
 
 const LOCAL_PROXY_WIDGET_URL_PREFIX = 'http://localhost:3001/widget';
-const DEFAULT_ROOT_WIDGET = 'andyh.near/widget/MainPage'
+const DEFAULT_ROOT_WIDGET = 'andyh.near/widget/MainPage';
 
 const roots = {} as { [key: string]: ReactDOM.Root };
 const widgets = {} as { [key: string]: any };
@@ -68,35 +68,35 @@ export default function Web() {
 
           const { data } = event;
           switch (eventType) {
-            case 'widget.callbackInvocation': {
-              monitor.widgetCallbackInvoked(data);
-              onCallbackInvocation({ data });
-              break;
-            }
-            case 'widget.callbackResponse': {
-              monitor.widgetCallbackReturned(data);
-              onCallbackResponse({ data });
-              break;
-            }
-            case 'widget.render': {
-              monitor.widgetRendered(data);
-              onRender({
-                data,
-                isDebug: showWidgetDebug,
-                markWidgetUpdated: (update: WidgetUpdate) => monitor.widgetUpdated(update),
-                mountElement,
-                widgetSourceBaseUrl: LOCAL_PROXY_WIDGET_URL_PREFIX,
-                widgets: widgetProxy,
-              });
-              break;
-            }
-            default:
-              break;
+              case 'widget.callbackInvocation': {
+                monitor.widgetCallbackInvoked(data);
+                onCallbackInvocation({ data });
+                break;
+              }
+              case 'widget.callbackResponse': {
+                monitor.widgetCallbackReturned(data);
+                onCallbackResponse({ data });
+                break;
+              }
+              case 'widget.render': {
+                monitor.widgetRendered(data);
+                onRender({
+                  data,
+                  isDebug: showWidgetDebug,
+                  markWidgetUpdated: (update: WidgetUpdate) => monitor.widgetUpdated(update),
+                  mountElement,
+                  widgetSourceBaseUrl: LOCAL_PROXY_WIDGET_URL_PREFIX,
+                  widgets: widgetProxy,
+                });
+                break;
+              }
+              default:
+                break;
           }
         } catch (e) {
           console.error({ event }, e);
         }
-      }
+      };
     }
 
     const messageListeners = [
@@ -125,17 +125,17 @@ export default function Web() {
         </div>
         <div className='debug-option'>
           <input
-              type="checkbox"
-              onChange={(e) => setShowMonitor(e.target.checked)}
-              checked={showMonitor}
+            type="checkbox"
+            onChange={(e) => setShowMonitor(e.target.checked)}
+            checked={showMonitor}
           />
           <span>Show Monitor</span>
         </div>
         <div className='debug-option'>
           <input
-              type="checkbox"
-              onChange={(e) => setShowWidgetDebug(e.target.checked)}
-              checked={showWidgetDebug}
+            type="checkbox"
+            onChange={(e) => setShowWidgetDebug(e.target.checked)}
+            checked={showWidgetDebug}
           />
           <span>Show Widget Debug</span>
         </div>
@@ -151,7 +151,7 @@ export default function Web() {
       </div>
       <div className="iframes">
         {showWidgetDebug && (
-            <h5>here be hidden iframes</h5>
+          <h5>here be hidden iframes</h5>
         )}
         <div key={0} widget-id={rootWidget}>
           <Widget

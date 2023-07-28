@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 import type {
   CreateChildElementOptions,
@@ -27,7 +27,7 @@ export function createChildElements({ children, depth, index, parentId }: Create
     const { type, props: { children: subChildren, ...props } } = children;
     const childProps = {
       ...deserializeProps({ id: parentId, props }),
-      key: `${parentId}-${depth}-${index}`
+      key: `${parentId}-${depth}-${index}`,
     };
 
     if (!subChildren || !subChildren.filter((c: any) => c !== undefined).length) {

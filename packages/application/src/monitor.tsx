@@ -65,12 +65,12 @@ export function WidgetMonitor({ monitor }: { monitor: WidgetActivityMonitor }) {
     <div id='widget-monitor'>
       <div className='metrics'>
         {dataPoints.map(({ label, value }, i) => (
-            <div className='metrics-data-point' key={`data-point-${i}`}>
-              <div className='data-point-header'>{label}</div>
-              <div className='data-point-value'>
-                {value}
-              </div>
+          <div className='metrics-data-point' key={`data-point-${i}`}>
+            <div className='data-point-header'>{label}</div>
+            <div className='data-point-value'>
+              {value}
             </div>
+          </div>
         ))}
       </div>
       <div className='widgets'>
@@ -84,12 +84,12 @@ export function WidgetMonitor({ monitor }: { monitor: WidgetActivityMonitor }) {
             widgetsBySource[source].push(widget);
             return widgetsBySource;
           }, {} as { [key: string]: Widget[] }))
-              .sort(([, aWidgets], [, bWidgets]) => bWidgets.length - aWidgets.length)
-              .map(([source, widgets], i) => (
-                  <div className='widget-row' key={`widget-row-${i}`}>
-                    {widgets.length} {source}
-                  </div>
-              ))
+            .sort(([, aWidgets], [, bWidgets]) => bWidgets.length - aWidgets.length)
+            .map(([source, widgets], i) => (
+              <div className='widget-row' key={`widget-row-${i}`}>
+                {widgets.length} {source}
+              </div>
+            ))
         }
       </div>
     </div>

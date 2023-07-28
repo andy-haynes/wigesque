@@ -38,8 +38,9 @@ function mountElement({ widgetId, element }: { widgetId: string, element: Widget
 export default function Web() {
   const [rootWidget, setRootWidget] = useState('');
   const [rootWidgetInput, setRootWidgetInput] = useState(DEFAULT_ROOT_WIDGET);
-  const [widgetCount, setWidgetCount] = useState(1);
   const [widgetUpdates, setWidgetUpdates] = useState('');
+  const [showMonitor, setShowMonitor] = useState(true);
+  const [showWidgetDebug, setShowWidgetDebug] = useState(false);
 
   const widgetProxy = new Proxy(widgets, {
     get(target, key: string) {
@@ -81,6 +82,7 @@ export default function Web() {
               monitor.widgetRendered(data);
               onRender({
                 data,
+                isDebug: showWidgetDebug,
                 markWidgetUpdated: (update: WidgetUpdate) => monitor.widgetUpdated(update),
                 mountElement,
                 widgetSourceBaseUrl: LOCAL_PROXY_WIDGET_URL_PREFIX,
@@ -105,11 +107,11 @@ export default function Web() {
 
     messageListeners.forEach((cb) => window.addEventListener('message', cb));
     return () => messageListeners.forEach((cb) => window.removeEventListener('message', cb));
-  }, []);
+  }, [showWidgetDebug]);
 
   if (!rootWidget) {
     return (
-      <div className='App'>
+      <div id='init-widget'>
         <div>
           <input
             type='text'
@@ -121,18 +123,36 @@ export default function Web() {
             Update Root Widget
           </button>
         </div>
+        <div className='debug-option'>
+          <input
+              type="checkbox"
+              onChange={(e) => setShowMonitor(e.target.checked)}
+              checked={showMonitor}
+          />
+          <span>Show Monitor</span>
+        </div>
+        <div className='debug-option'>
+          <input
+              type="checkbox"
+              onChange={(e) => setShowWidgetDebug(e.target.checked)}
+              checked={showWidgetDebug}
+          />
+          <span>Show Widget Debug</span>
+        </div>
       </div>
     );
   }
 
   return (
     <div className='App'>
-      <WidgetMonitor monitor={monitor} />
+      {showMonitor && <WidgetMonitor monitor={monitor} />}
       <div id={getAppDomId(rootWidget)} className='iframe'>
         root widget goes here
       </div>
       <div className="iframes">
-        <h5>here be hidden iframes</h5>
+        {showWidgetDebug && (
+            <h5>here be hidden iframes</h5>
+        )}
         <div key={0} widget-id={rootWidget}>
           <Widget
             id={rootWidget}

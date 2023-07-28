@@ -242,7 +242,6 @@ export interface WidgetCallbackInvocationResult {
 
 export interface WidgetProps {
   children?: any[];
-  className: string;
   id: string;
 }
 

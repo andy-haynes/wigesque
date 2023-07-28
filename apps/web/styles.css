@@ -41,6 +41,22 @@
   color: #888;
 }
 
+#init-widget {
+  padding: 24px;
+}
+
+.debug-option {
+  padding: 8px 16px;
+}
+
+.debug-option > input {
+  margin-right: 8px;
+}
+
+.debug-option > span {
+  font-size: 18px;
+}
+
 #widget-monitor {
   display: flex;
   flex-direction: row;
@@ -79,14 +95,7 @@
   text-align: right;
 }
 
-.iframes {
-  display: flex;
-  flex-flow: row wrap;
-  border: 1px solid orangered;
-}
-
 .iframe {
-  /*align-items: center;*/
   flex: 1;
   justify-content: space-between;
   margin: 4px;
@@ -97,18 +106,6 @@
 .iframe > div {
   min-width: 60px;
   min-height: 60px;
-}
-
-.iframe-initialized {
-  background-color: green;
-}
-
-.iframe-unrendered {
-  background-color: red;
-}
-
-.iframe-loading {
-  background-color: goldenrod;
 }
 
 span {

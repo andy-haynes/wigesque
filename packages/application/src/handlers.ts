@@ -53,6 +53,7 @@ export function onCallbackResponse({
 
 export function onRender({
   data,
+  isDebug = false,
   markWidgetUpdated,
   mountElement,
   widgetSourceBaseUrl,
@@ -65,12 +66,14 @@ export function onRender({
   const componentChildren = createChildElements({ children, depth: 0, parentId: widgetId });
   const element = createElement({
     children: [
-      React.createElement('span', { className: 'dom-label' }, `[${widgetId.split('##')[0]}]`),
-      React.createElement('br'),
+      ...(isDebug ? [
+        React.createElement('span', { className: 'dom-label' }, `[${widgetId.split('##')[0]}]`),
+        React.createElement('br'),
+      ] : []),
       ...(Array.isArray(componentChildren) ? componentChildren : [componentChildren]),
     ],
     id: widgetId,
-    props,
+    props: isDebug ? { ...props, className: 'iframe' } : props,
     type: node.type,
   });
   mountElement({ widgetId, element });

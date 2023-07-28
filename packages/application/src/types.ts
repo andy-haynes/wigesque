@@ -33,6 +33,7 @@ export interface CallbackResponseHandlerOptions {
 
 export interface RenderHandlerOptions {
   data: RenderEventData;
+  isDebug?: boolean;
   markWidgetUpdated: (update: WidgetUpdate) => void;
   mountElement: ({ widgetId, element }: { widgetId: string, element: any }) => void;
   widgetSourceBaseUrl: string;

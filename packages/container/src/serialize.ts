@@ -246,7 +246,6 @@ export function serializeNode({ h, node, index, childWidgets, callbacks, parentI
         type: 'div',
         props: {
           id: 'dom-' + widgetId,
-          className: 'iframe',
         },
       };
     }

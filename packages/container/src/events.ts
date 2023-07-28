@@ -91,12 +91,13 @@ export function invokeWidgetCallback({
 }
 
 /**
- * Return an event handler function to be registered under `window.on('message', ...)`
+ * Return an event handler function to be registered under `window.addEventHandler('message', fn(event))`
  * @param buildRequest Function to build an inter-Widget asynchronous callback request
  * @param callbacks The set of callbacks defined on the target Widget
  * @param deserializeProps Function to deserialize props passed on the event
  * @param postCallbackInvocationMessage Request invocation on external Widget via window.postMessage
  * @param postCallbackResponseMessage Send callback execution result to calling Widget via window.postMessage
+ * @param renderDom Callback for rendering DOM within the widget
  * @param renderWidget Callback for rendering the Widget
  * @param requests The set of inter-Widget callback requests being tracked by the Widget
  * @param serializeArgs The function responsible for serializing arguments to be passed via window.postMessage

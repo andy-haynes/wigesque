@@ -14,5 +14,6 @@ export {
 export * from './types';
 export {
   deserializeProps,
-  postMessageToChildIframe,
+  postMessageToIframe,
+  postMessageToWidgetIframe,
 } from './widget-container';

@@ -20,7 +20,7 @@ export interface WidgetUpdate {
 export interface Widget {
   parentId: string;
   props: any;
-  sourceUrl: string;
+  source: string;
 }
 
 export interface CallbackInvocationHandlerOptions {

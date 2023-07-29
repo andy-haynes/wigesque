@@ -59,12 +59,19 @@ export interface UpdateEventData {
   type: WidgetUpdate;
 }
 
+export interface WidgetSourceData {
+  source: string;
+  type: TranspilerWidgetFetch;
+}
+
 export type EventData = CallbackInvocationEventData
   | CallbackResponseEventData
   | DomCallbackEventData
   | RenderEventData
-  | UpdateEventData;
+  | UpdateEventData
+  | WidgetSourceData;
 
+type TranspilerWidgetFetch = 'transpiler.widgetFetch';
 type WidgetCallbackInvocation = 'widget.callbackInvocation';
 type WidgetCallbackResponse = 'widget.callbackResponse';
 type WidgetDomCallback = 'widget.domCallback';

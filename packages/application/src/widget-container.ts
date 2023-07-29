@@ -5,9 +5,13 @@ import type {
   IframePostMessageOptions,
 } from './types';
 
-export function postMessageToChildIframe({ id, message, targetOrigin }: IframePostMessageOptions): void {
-  (document.getElementById(getIframeId(id)) as HTMLIFrameElement)
+export function postMessageToIframe({ id, message, targetOrigin }: IframePostMessageOptions): void {
+  (document.getElementById(id) as HTMLIFrameElement)
     ?.contentWindow?.postMessage(message, targetOrigin);
+}
+
+export function postMessageToWidgetIframe({ id, message, targetOrigin }: IframePostMessageOptions): void {
+  postMessageToIframe({ id: getIframeId(id), message, targetOrigin });
 }
 
 export function deserializeProps({ id, props }: DeserializePropsOptions): any {
@@ -30,7 +34,7 @@ export function deserializeProps({ id, props }: DeserializePropsOptions): any {
           };
         }
 
-        postMessageToChildIframe({
+        postMessageToWidgetIframe({
           id,
           message: {
             args: serializedArgs,

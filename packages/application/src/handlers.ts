@@ -6,7 +6,7 @@ import type {
   CallbackResponseHandlerOptions,
   RenderHandlerOptions,
 } from './types';
-import { postMessageToChildIframe } from './widget-container';
+import { postMessageToWidgetIframe } from './widget-container';
 
 export function onCallbackInvocation({
   data,
@@ -16,7 +16,7 @@ export function onCallbackInvocation({
     post a widget callback message to the parent iframe
   */
   const { args, method, originator, requestId, targetId } = data;
-  postMessageToChildIframe({
+  postMessageToWidgetIframe({
     id: targetId,
     message: {
       args,
@@ -38,7 +38,7 @@ export function onCallbackResponse({
     return the value of the callback execution to the calling widget
   */
   const { isComponent, requestId, result, targetId } = data;
-  postMessageToChildIframe({
+  postMessageToWidgetIframe({
     id: targetId,
     message: {
       isComponent,
@@ -89,12 +89,12 @@ export function onRender({
       widgets[childWidgetId] = {
         parentId: widgetId,
         props: widgetProps,
-        sourceUrl: `${widgetSourceBaseUrl}/${source}`,
+        source,
       };
     } else {
       /* widget iframe is already loaded, post update message to iframe */
       markWidgetUpdated({ props, widgetId });
-      postMessageToChildIframe({
+      postMessageToWidgetIframe({
         id: widgetId,
         message: {
           props: widgetProps,

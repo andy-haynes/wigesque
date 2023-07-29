@@ -8,7 +8,7 @@ export default function Transpiler() {
         'connect-src *',
         'img-src * data:',
         'script-src \'unsafe-inline\' \'unsafe-eval\'',
-        'script-src-elem https://unpkg.com https://cdn.jsdelivr.net http://localhost http://localhost:3001 \'unsafe-inline\'',
+        'script-src-elem https://unpkg.com https://cdn.jsdelivr.net \'unsafe-inline\'',
         '',
       ].join('; ')}
       height={0}
@@ -36,12 +36,11 @@ export default function Transpiler() {
 
     function fetchWidgetSource(widgetPath) {
       if (sourceCache[widgetPath]) {
-        return Promise.resolve(sourceCache[widgetPath]);
+        return sourceCache[widgetPath];
       }
 
       const provider = new window.nearApi.providers.JsonRpcProvider('https://rpc.near.org');
-
-      return provider.query({
+      sourceCache[widgetPath] = provider.query({
         account_id: 'social.near',
         args_base64: bytesToBase64(new TextEncoder().encode('{"keys":["' + widgetPath + '"]}')),
         finality: 'optimistic',
@@ -51,26 +50,27 @@ export default function Transpiler() {
         const decodedResult = new TextDecoder().decode(Uint8Array.from(result));
         const [author, , widget] = widgetPath.split('/');
         return JSON.parse(decodedResult)[author].widget[widget];
-      }).catch((e) => console.error(e));
+      }).catch((e) => console.error(e, { widgetPath }));
+
+      return sourceCache[widgetPath];
     }
 
     function getTranspiledWidget(widgetPath) {
-      if (sourceCache[widgetPath]) {
-        return Promise.resolve(sourceCache[widgetPath]);
-      }
-
-      return fetchWidgetSource(widgetPath)
+      return fetchWidgetSource(widgetPath.split('##')[0])
         .then((source) => {
-          const { code } = transpileSource('function WidgetComponent() { ' + source + ' }');
-          sourceCache[widgetPath] = code;
-          window.parent.postMessage({ type: 'transpiler.sourceTranspiled', source: code }, '*');
+          const { code } = transpileSource('async function WidgetComponent() { ' + source + ' }');
+          window.parent.postMessage({
+            type: 'transpiler.sourceTranspiled',
+            source: widgetPath,
+            widgetComponent: code,
+          }, '*');
         }).catch((e) => console.error(e));
     }
 
     window.addEventListener('message', (event) => {
       const { data } = event;
       if (data?.type === 'transpiler.widgetFetch') {
-          fetchWidgetSource(data.widgetPath);
+          getTranspiledWidget(data.source);
       }
     });
   </script>

@@ -76,7 +76,7 @@ export function WidgetMonitor({ monitor }: { monitor: WidgetActivityMonitor }) {
       <div className='widgets'>
         {
           Object.entries(monitor.widgets.reduce((widgetsBySource, widget) => {
-            const { sourceUrl: source } = widget;
+            const { source } = widget;
             if (!widgetsBySource[source]) {
               widgetsBySource[source] = [];
             }
